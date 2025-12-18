@@ -10,7 +10,7 @@ website:
         text: Final Report
     right:
       - icon: github
-        href: https://github.com/yourusername/repo # Update this later
+        href: https://github.com/kumaradityag/fp-control-blog
 
 format:
   html:
