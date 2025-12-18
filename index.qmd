@@ -1,0 +1,39 @@
+---
+title: "Lane Following using Pure Pursuit Control"
+author: 
+  - name: "Emulie Chhor"
+    affiliation: "Université de Montréal"
+  - name: "Kumaraditya Gupta"
+    affiliation: "Université de Montréal and Mila"
+date: today
+abstract: "This is a summary of our project results..."
+---
+
+## Introduction
+
+Here is some text. Quarto allows you to put things in the margins.
+
+[This is a side note that will appear in the right margin.]{.aside}
+
+## Analysis
+
+We can place images or charts that span the full width or sit in the margin.
+
+::: {.column-margin}
+![A smaller figure ref for now](./assets/image.png)
+:::
+
+### Code Block
+
+Because we enabled code folding, this big block won't clutter the page unless the user clicks "Show Code".
+
+```{python}
+import numpy as np
+
+a = 1
+b = 2
+multiple = a * b
+
+# Complex plotting code...
+```
+

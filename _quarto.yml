@@ -1,0 +1,24 @@
+project:
+  type: website
+  output-dir: docs # This is apparently useful for GitHub Pages later
+
+website:
+  title: "Duckietown Course Project - Control"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Final Report
+    right:
+      - icon: github
+        href: https://github.com/yourusername/repo # Update this later
+
+format:
+  html:
+    theme: cosmo
+    toc: true             # Table of Contents
+    toc-location: left    # Distill style puts TOC on the left
+    page-layout: article  # Important: allows for margin content
+    code-fold: true       # Allows users to show/hide code
+    code-tools: true      # Adds a "Source Code" button
+    smooth-scroll: true
+    # css: styles.css       # Optional custom CSS

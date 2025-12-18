@@ -1,0 +1,23 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Lane Following using Pure Pursuit Control",
+    "section": "",
+    "text": "Here is some text. Quarto allows you to put things in the margins.\nThis is a side note that will appear in the right margin."
+  },
+  {
+    "objectID": "index.html#introduction",
+    "href": "index.html#introduction",
+    "title": "Lane Following using Pure Pursuit Control",
+    "section": "",
+    "text": "Here is some text. Quarto allows you to put things in the margins.\nThis is a side note that will appear in the right margin."
+  },
+  {
+    "objectID": "index.html#analysis",
+    "href": "index.html#analysis",
+    "title": "Lane Following using Pure Pursuit Control",
+    "section": "Analysis",
+    "text": "Analysis\nWe can place images or charts that span the full width or sit in the margin.\n\n\n\n\n\nA smaller figure ref for now\n\n\n\nCode Block\nBecause we enabled code folding, this big block won’t clutter the page unless the user clicks “Show Code”.\n\n\nCode\nimport numpy as np\n\na = 1\nb = 2\nmultiple = a * b\n\n# Complex plotting code..."
+  }
+]
