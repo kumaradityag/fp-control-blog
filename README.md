@@ -13,3 +13,5 @@ quarto preview
 This should start showing the html version on some port. I'm still learning quarto by looking at the docs [here](https://quarto.org/docs/guide/) - but lemme know if this doesn't work or if you have any other questions.
 
 The main file to edit should be `index.qmd`.
+
+Hot reload on `quarto preview` does not work if you update included files. This can be annoying.
