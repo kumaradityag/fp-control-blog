@@ -4,20 +4,48 @@
     "href": "index.html",
     "title": "Lane Following using Pure Pursuit Control",
     "section": "",
-    "text": "Here is some text. Quarto allows you to put things in the margins.\nThis is a side note that will appear in the right margin."
+    "text": "Add intro here. Here is some text. Quarto allows you to put things in the margins.\nTesting a new line.\nThis is a side note that will appear in the right margin."
   },
   {
     "objectID": "index.html#introduction",
     "href": "index.html#introduction",
     "title": "Lane Following using Pure Pursuit Control",
     "section": "",
-    "text": "Here is some text. Quarto allows you to put things in the margins.\nThis is a side note that will appear in the right margin."
+    "text": "Add intro here. Here is some text. Quarto allows you to put things in the margins.\nTesting a new line.\nThis is a side note that will appear in the right margin."
   },
   {
-    "objectID": "index.html#analysis",
-    "href": "index.html#analysis",
+    "objectID": "index.html#trajectory-generation",
+    "href": "index.html#trajectory-generation",
     "title": "Lane Following using Pure Pursuit Control",
-    "section": "Analysis",
-    "text": "Analysis\nWe can place images or charts that span the full width or sit in the margin.\n\n\n\n\n\nA smaller figure ref for now\n\n\n\nCode Block\nBecause we enabled code folding, this big block won’t clutter the page unless the user clicks “Show Code”.\n\n\nCode\nimport numpy as np\n\na = 1\nb = 2\nmultiple = a * b\n\n# Complex plotting code..."
+    "section": "Trajectory Generation",
+    "text": "Trajectory Generation\nAdd info about trajectory generation\nWe can place images or charts that span the full width or sit in the margin.\n\n\n\n\n\nA smaller figure ref for now\n\n\n\nCode Block\nBecause we enabled code folding, this big block won’t clutter the page unless the user clicks “Show Code”.\n\n\nCode\nimport numpy as np\n\na = 1\nb = 2\nmultiple = a * b\n\n# Complex plotting code..."
+  },
+  {
+    "objectID": "index.html#pure-pursuit-control",
+    "href": "index.html#pure-pursuit-control",
+    "title": "Lane Following using Pure Pursuit Control",
+    "section": "Pure Pursuit Control",
+    "text": "Pure Pursuit Control\nAdd information about pure pursuit here. With some figures maybe."
+  },
+  {
+    "objectID": "index.html#results",
+    "href": "index.html#results",
+    "title": "Lane Following using Pure Pursuit Control",
+    "section": "Results",
+    "text": "Results\nAdd result videos to this section."
+  },
+  {
+    "objectID": "index.html#testing",
+    "href": "index.html#testing",
+    "title": "Lane Following using Pure Pursuit Control",
+    "section": "Testing",
+    "text": "Testing\nSteps to reproduce our results.\nClone the project GitHub repository\ngit clone git@github.com:kumaradityag/fp-control"
+  },
+  {
+    "objectID": "index.html#conclusion",
+    "href": "index.html#conclusion",
+    "title": "Lane Following using Pure Pursuit Control",
+    "section": "Conclusion",
+    "text": "Conclusion\nAdd info about what we learnt and how to move forward."
   }
 ]

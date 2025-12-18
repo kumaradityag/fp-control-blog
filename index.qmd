@@ -11,29 +11,26 @@ abstract: "This is a summary of our project results..."
 
 ## Introduction
 
-Here is some text. Quarto allows you to put things in the margins.
+{{< include ./include/_introduction.qmd >}}
 
-[This is a side note that will appear in the right margin.]{.aside}
+## Trajectory Generation
 
-## Analysis
+{{< include ./include/_trajectory_generation.qmd >}}
 
-We can place images or charts that span the full width or sit in the margin.
+## Pure Pursuit Control
 
-::: {.column-margin}
-![A smaller figure ref for now](./assets/image.png)
-:::
+{{< include ./include/_pure_pursuit.qmd >}}
 
-### Code Block
+## Results
 
-Because we enabled code folding, this big block won't clutter the page unless the user clicks "Show Code".
+{{< include ./include/_results.qmd >}}
 
-```{python}
-import numpy as np
+## Testing
 
-a = 1
-b = 2
-multiple = a * b
+{{< include ./include/_testing.qmd >}}
 
-# Complex plotting code...
-```
+## Conclusion
+
+{{< include ./include/_conclusion.qmd >}}
+
 
