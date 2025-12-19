@@ -1,3 +1,11 @@
 Add intro here. Here is some text. Quarto allows you to put things in the margins.
 
 [This is a side note that will appear in the right margin.]{.aside}
+
+```{mermaid}
+flowchart LR
+  A[Hard edge] --> B(Round edge)
+  B --> C{Decision}
+  C --> D[Result one]
+  C --> E[Result two]
+```

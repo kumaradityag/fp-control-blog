@@ -4,14 +4,14 @@
     "href": "index.html",
     "title": "Lane Following using Pure Pursuit Control",
     "section": "",
-    "text": "Add intro here. Here is some text. Quarto allows you to put things in the margins.\nTesting a new line.\nThis is a side note that will appear in the right margin."
+    "text": "Add intro here. Here is some text. Quarto allows you to put things in the margins.\nThis is a side note that will appear in the right margin.\n\n\n\n\n\nflowchart LR\n  A[Hard edge] --&gt; B(Round edge)\n  B --&gt; C{Decision}\n  C --&gt; D[Result one]\n  C --&gt; E[Result two]"
   },
   {
     "objectID": "index.html#introduction",
     "href": "index.html#introduction",
     "title": "Lane Following using Pure Pursuit Control",
     "section": "",
-    "text": "Add intro here. Here is some text. Quarto allows you to put things in the margins.\nTesting a new line.\nThis is a side note that will appear in the right margin."
+    "text": "Add intro here. Here is some text. Quarto allows you to put things in the margins.\nThis is a side note that will appear in the right margin.\n\n\n\n\n\nflowchart LR\n  A[Hard edge] --&gt; B(Round edge)\n  B --&gt; C{Decision}\n  C --&gt; D[Result one]\n  C --&gt; E[Result two]"
   },
   {
     "objectID": "index.html#trajectory-generation",

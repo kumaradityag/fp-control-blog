@@ -14,11 +14,14 @@ website:
 
 format:
   html:
-    theme: cosmo
+    theme: [cosmo, ./styles/theme.scss]
     toc: true             # Table of Contents
     toc-location: left    # Distill style puts TOC on the left
     page-layout: article  # Important: allows for margin content
     code-fold: true       # Allows users to show/hide code
     code-tools: true      # Adds a "Source Code" button
     smooth-scroll: true
+    html-math-method: katex
     # css: styles.css       # Optional custom CSS
+    mermaid:
+      theme: default
