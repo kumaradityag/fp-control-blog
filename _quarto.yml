@@ -25,3 +25,4 @@ format:
     # css: styles.css       # Optional custom CSS
     mermaid:
       theme: default
+  gfm: {}
