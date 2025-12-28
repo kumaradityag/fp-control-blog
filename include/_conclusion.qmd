@@ -1,1 +1,53 @@
-Add info about what we learnt and how to move forward.
+## Limitations
+
+Although our pure pursuit method performed quite well in simulation, its performance in the physical world has substantial room for improvement. The gap between simulation and reality exposed fundamental weaknesses in both our trajectory generation and control algorithms.
+
+### Trajectory Generation Limitations
+
+Our trajectory generation is still not robust to sensor noise and environmental variability in the real world. This fragility becomes evident when comparing the real-world performance on the closed inner-loop map and the intersection map. While the duckiebot provided consistent lane boundaries in the virtual environment, our outlier rejection mechanism failed to adequately filter out incorrect lane boundaries introduced by lightning variation and occlusions that occur in the real world, making the trajectory generation algorithm include incorrect boundary detection into its trajectory generation.
+
+Additionally, we saw that the RANSAC line fitting algorithm performance is highly dependent on the parameters being given. The inlier and yellow points threshold required manual tuning for each distinct scenario: the parameters proved effective for inner-loop failed on the outer-loop, forcing us to maintain distinct parameter configuration for different maps, making this approach impractical when dealing with unknown environments. A particularly challenging issue emerged with our inner-loop vs outer-loop boundary selection strategy. Currently, we rely on the inner-boundary (yellow) when driving on the inner lane whereas we rely on the outer-boundary (white) when driving on the outer lane, but real-world scenarios demand dynamic boundary selection. An ideal solution would be to select the most trustworthy boundary based on some quality metrics.
+
+### Pure Pursuit Limitations
+
+Despite its computationally efficient, the pure pursuit controller’s performance is highly sensitive to the lookahead distance parameter and greatly impacts our system behavior. Insufficient lookahead distance induces oscillations and overesteering response around minor errors whereas excessive lookahead distance causes aggressive corner-cutting. An adaptive lookahead strategy, where lookahead would be adjusted based on vehicle speed, path curvature and cross-track error performance would address this rigid approach.
+
+More importantly, pure pursuit fundamental flaws lie in its assumption of instantaneous command execution. While this assumption remains somewhat true in simulation, this premise crumbles when the duckie enters the physical world. The robot exhibits non-negligible actuators delay (around 150-200ms from command to execution) and doesn’t account for tire slip that may occur at moderate speed. When faced with sharp maneuvers, the vehicle’s delayed response accumulates tracking error, prompting the controller to correct itself aggressively. This feedback pattern produces jerky driving behavior, which wouldn’t occur in an experienced human driver.
+
+Our attempt at a dynamic control strategy through curvature-based velocity modulation only saw marginal improvements: the duckiebot continued to exhibit harsh braking around tight corners and aggressive acceleration upon exit. This nauseating driving behavior can be explained by the controller’s single optimization objective: minimizing its geometric deviation from the reference path. The controller possesses no notion of passenger comfort and doesn’t adhere to predictable driving norms, which are all behavior needed to drive safely on the road. 
+
+## What's next
+
+While our project successfully demonstrated lane-following in a closed loop environment, numerous opportunities exist to extend this foundation toward more robust and sophisticated autonomous navigation. We identified several directions for future development:
+
+### Improve Lane Boundaries Detection
+
+We have seen that the current lane boundary detection is still not robust to outliers due to occlusion and lightning variation. Several strategies could be implemented to improve robustness. Temporal filtering could be leveraged to exploit the sequential nature of video suppress transient noise across consecutive frames. Region of interest masking could also be applied to constraint detection only around the region where lanes are expected to appear, which would reduce false positives coming from ceiling and irrelevant background elements. Most importantly, Bayesian filtering such as Kalman filters could be applied to maintain a probabilistic belief for the lane positions and orientation over time. This approach would enable the duckie to “remember” the lane boundaries during a brief occlusion. 
+
+
+### Improve Trajectory Generation 
+
+The current RANSAC-based approach only minimize geometrical error and doesn’t account for jerky trajectories. Quadratic programming (QP) could be implemented to minimize for both the geometrical error and jerk behavior by defining constraints around velocity, acceleration and curvature limits.
+
+## Improving Control Architecture
+
+Pure pursuit works relatively well when we need to control around corner, but only takes into account heading error for more stable control. A naive improvement would be to include both PID and pure pursuit idea and include both cross-track error and heading error, something which Stanley control does quite well. Theoretically, Stanley control would be more stable at higher and lower speed because it would naturally transition between behaviors based on velocity: the heading term would dominate on higher speed and would gradually transition to CTE as it slows down.
+
+### Object Detection and Avoidance
+
+Implementing pedestrian detection and integrating dynamic obstacle avoidance would be the first step toward context-aware navigation. Pedestrian detection could be solved using modern deep learning architecture such as YOLO or MobileNet while dynamic obstacle avoidance could be implemented using the Dynamic Window Approach (DWA). DWA samples commands and simulate their execution over a short horizon and selects the command which maximize progress toward the goal point while keeping the trajectory collision-free.
+
+### Intersection Navigation
+
+The second step towards context-aware navigation is to make the duckiebot drive around maps with intersections and introduces new challenges: stop line detection and turn signal interpretation. Successful behavior planning requires multi-stage hierarchical maneuver planning in order to plan what the duckie needs to do next: stop at the line, wait for traffic to clear, turn right, change lane, ...
+
+### Multi-Agent Coordination
+
+The last step towards context-aware navigation is to add coordination inside
+the system, that is to make the duckiebot drive around other vehicles. Coordination 
+requires a communication architecture for specific situations, mainly around 
+intersection and traffic light. Simple heuristics around common driving courtesy 
+(no hard breaks, FIFO at 4 points intersection, ...) could first be implemented 
+and then decentralized coordination second.
+
+
