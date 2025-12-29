@@ -1,6 +1,126 @@
-Steps to reproduce our results.
-
-Clone the project GitHub repository
-```bash
+To test the code, first clone the project GitHub repository and follow the 
+steps defined in the `README.md` file.
+```{bash}
 git clone git@github.com:kumaradityag/fp-control
 ```
+
+If you followed all the steps in the `README.md` file, you should have 
+the following:
+- You have cloned the repo
+- You have installed the duckietown-shell. You can verify that you have 
+  sucessfully installed it using `dts --version`. If that's not the 
+  case, please follow the instructions [here](https://docs.duckietown.com/daffy/opmanual-duckiebot/setup/setup_laptop/setup_dt_shell.html)
+- You have created your virtual duckiebot. You can verify that your virtual 
+  duckie exists with the command `dts duckiebot virtual start vbot` and then 
+  `dts fleet discover`. `vbot` is the name of our virtual duckie, but feel free 
+  to replace it with your own virtual duckie name
+- You have your real life robot. This step is only required if you want to 
+  test the demo in real life. If you want to get your duckie hardware, see
+  the official documentation [here](https://docs.duckietown.com/daffy/opmanual-duckiebot/preliminaries_hardware/get_hardware/index.html)
+
+### Understanding the project architecture
+
+The most important directories of our projects are `packages/trajectory_planner`
+and `packages/pure_pursuit_control`, which are where our trajectory generation 
+code and our pure pursuit code live.
+
+### Testing the project
+
+Virtual and physical duckie have different wheel friction and mass distribution, 
+so they respond to the same parameters differently. Additionally, driving 
+in the inner or outter lane also require different parameters. Therefore, you will 
+probably need to tune your parameters for your own duckiebot.
+
+The configs for the trajectory planner and the pure pursuit controller can 
+be found respectively inside `packages/trajectory_planner/config/trajectory_planner_node/default.yaml`
+and `packages/pure_pursuit_control/config/pure_pursuit_control_node/default.yaml`.
+
+The trajectory planner node has the following parameters:
+- `min_forward`: minimum distance at which we consider trajectory points
+- `max_forward`: maximum distance at which we consider trajectory points
+- `n_samples`: number of samples used for ransac
+- `lane_width`: width of the lane in meters
+- `epsilon`: error around lane width
+- `yellow_pts_threshold`: minimum points in the trajectory for the yellow lane to be valid
+- `white_pts_threshold`: minimum points in the trajectory for the white lane to be valid
+- `default_mode`: relying on WHITE/YELLOW lane
+- `ransac_max_iterations`: number of iterations for ransac to compute inliers
+- `ransac_distance_threshold`: how far should ransac sample the points from (in m)
+- `poly_degree`: polynomial degree for ransac
+- `buffer_size`: number of previous trajectory saved in buffer
+- `buffer_smooth_alpha`: float number between 0-1 used to smooth out current 
+  trajectory based on the previous one
+- `buffer_theta_threshold`: theta angle for which in degrees
+
+The pure pursuit control node has the following parameters:
+- `lookahead_distance`: distance at which the pure pursuit controller look ahead 
+  (in cm)
+- `v_bar`: linear velocity
+- `v_bar_max`: maximal linear velocity
+- `v_bar_min`: minimal linear velocity
+- `width`: chassis width of the duckie. Should stay 0.1
+- `omega_factor`: how hard we want the duckie to turn
+
+#### Launching the code
+
+Once the parameters have been defined, the code can be launched with the 
+following commands.  You will need 4 terminals to view everything needed. 
+
+In terminal 1:
+```{bash}
+cd fp-control
+dts fleet discover
+dts matrix run --standalone --map ./assets/duckiematrix/map/loop/
+```
+
+In terminal 2:
+```{bash}
+dts matrix attach vbot map_0/vehicle_0
+dts devel build -H vbot -f
+dts devel run -H vbot -L lane-following
+```
+
+In terminal 3:
+```{bash}
+dts gui vbot
+# Wait for the entrypoint - inside it run:
+rqt_image_view
+# Go to /trajectory_planner to see generated trajectory
+```
+
+In terminal 4:
+```{bash}
+ssh duckie@vbot.local
+# After logging into your duckiebot:
+docker exec -it ros-interface bash
+```
+
+Some tips:
+- Instead of re-building the code every time we change the parameters in 
+  terminal 2, we can use the command `rosparam set <param_name> <value>`.
+  The list of params can be found with `rosparam list | grep <param_name>`
+- To override the duckie commands, you can open a fifth terminal and use the 
+  keyboard control with `dts duckiebot keyboard_control vbot`. To make the 
+  duckie stop, you can click on "emergency stop".
+
+
+#### Testing the project on the virtual duckie
+
+**Parameters to drive on the outer lane**
+
+TBD
+
+**Parameters to drive on the inner lane**
+
+TBD
+
+#### Testing the project on the physical duckie
+
+**Parameters to drive on the outer lane**
+
+TBD
+
+**Parameters to drive on the inner lane**
+
+TBD
+
