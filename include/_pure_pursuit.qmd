@@ -1,1 +1,396 @@
-Add information about pure pursuit here. With some figures maybe.
+The second part of the project focused on enhancing the controller node using the 
+“Pure Pursuit” algorithm, which enables the robot to adjust its path before the 
+error accumulates. Similar to PID control, pure pursuit is a steering method 
+that computes the linear (v) and angular velocity ($\omega$). However, instead of 
+relying on the cross-track error (CTE), the lateral distance between the vehicle 
+and the centerlane, it relies on the pre-computed trajectory as a reference.
+
+The pure pursuit controller consists of two keys steps:
+
+1. Goal Point Computation: We determine the goal point to which the robot 
+   aims to reach
+2. Control Commands Computation: We compute the linear and angular velocity required 
+   to make the duckie reach the computed goal point
+
+```{mermaid}
+flowchart LR
+    A[Goal Point Computation] --> B[Control Command Computation]
+```
+
+If you are familiar with the "carrot and stick" analogy, pure pursuit control 
+works fashionably in the same way: we make the robot (the donkey) move towards 
+the goal point (the carrot), which we always keep at a distance $L_d$, the 
+lookahead distance. If the donkey is too far from the goal point, we "stick" 
+it to the robot and make it turn more aggressively towards the goal point.
+
+
+{{< video https://youtu.be/-PVFBGN_zoM?si=9V-fbQ8J0mmzbZtT >}}
+
+
+### Goal Point Calculation - Line-circle intersection algorithm
+
+Many methods can be used to compute the goal point, but we decided to go with 
+the “line-circle intersection” algorithm for its computational simplicity. 
+
+Mathematically speaking, the line-circle intersection algorithm tries to find 
+the points where a straight line intersects the circle with radius R. 
+
+
+::: {.callout-note collapse="true" title="Understanding the maths behind the line-circle intersection algorithm"}
+
+Given a circle centered at the origin with radius r and points P1(x1, y1) and 
+P2(x2, y2). The implicit line equation for the closed-form geometry can be 
+written as
+
+$$ d_y x - d_x y + D = 0$$
+
+where
+
+- $D=x_1 y_2 - x_2 y_1$
+- $d_x = x_2 - x_1$
+- $d_y = y_2 - y_1$
+
+The perpendicular projection of the origin onto the line is:
+
+$$
+\begin{aligned}
+x_0 &= \frac{D d_y}{d_r^2} \\
+y_0 &= \frac{-D d_x}{d_r^2}
+\end{aligned}
+$$
+
+where
+$dr= \sqrt{dx^2 + dy^2}$
+
+Since the closest point from the origin to the line is a perpendicular 
+projection, we can determine the existence of the intersection using
+the distance from the origin to the line
+
+$$\text{dist} = \frac{|D|}{d_r}$$
+
+- If dist > r, there are no intersection
+- If dist = r, one tangent intersection
+- If dist < r, there are two intersections
+
+From the right-triangle geometry, we can find the distance along the 
+line from the closest point to each intersection, which we can use 
+to move from the closest point forward and backward along the line
+
+$$h = \sqrt{r^2 - \left(\frac{D}{d_r}\right)^2}$$
+
+The unit direction along the line is given by
+
+$$\hat{\mathbf{u}} = \left( \frac{d_x}{d_r}, \frac{d_y}{d_r} \right)$$
+
+This gives us the formula to compute the intesection points
+
+$$
+\mathbf{P}_{1,2}
+=
+\begin{pmatrix}
+x_0 \\
+y_0
+\end{pmatrix}
+\pm
+h \,\hat{\mathbf{u}}
+$$
+
+<!-- $$ -->
+<!-- \begin{aligned} -->
+<!-- x_0 &= \frac{D d_y}{d_r^2}, \\ -->
+<!-- y_0 &= \frac{-D d_x}{d_r^2}, \\ -->
+<!-- \hat{\mathbf{u}} &= \left( \frac{d_x}{d_r}, \frac{d_y}{d_r} \right), \\ -->
+<!-- h &= \frac{\sqrt{r^2 d_r^2 - D^2}}{d_r}. -->
+<!-- \end{aligned} -->
+<!-- $$ -->
+
+$$
+\begin{aligned}
+x &= \frac{D d_y \pm d_x \sqrt{r^2 d_r^2 - D^2}}{d_r^2} \\
+y &= \frac{-D d_x \pm d_y \sqrt{r^2 d_r^2 - D^2}}{d_r^2}
+\end{aligned}
+$$
+
+
+:::
+
+Since the line-circle intersection method works for two points only and the 
+trajectory is an array of points, we need to iteratively compute the potential 
+intersections points for contiguous segments as follows
+
+- $x=\frac{D dy \pm sgn(dy) dx \sqrt{\Delta}}{L_d^2}$
+- $y=\frac{-D dx \pm \| dy \| \sqrt{\Delta}}{L_d^2}$
+
+Where
+
+- $dx=x_2-x_1$
+- $dy=y_2-y_1$
+- $dr= \sqrt{dx^2 + dy^2}$
+- $D=x_1 y_2 - x_2 y_1$
+- $\Delta=r^2 dr^2 - D^2$
+- $f(x) = \begin{cases} 0, & x<0 \\ x, & x\ge 0 \end{cases}$
+
+To determine the validity of the goal point computed, we can follow the following
+graph:
+
+```{mermaid}
+flowchart LR
+    A[Discriminant] -- $$\Delta$$<0 --> B(No intersection Found) --> E;
+    A -- $$\Delta$$=0 --> C(One Intersection Found);
+    A -- $$\Delta$$>0 --> D(Two Intersections Found);
+    E[Use last point in trajectory];
+    F(Range Check);
+    G[Select intersection closest to last goal point];
+    C -- invalid --> E;
+    D -- both invalid --> E;
+    D -- one invalid --> C;
+    D -- both valid --> G;
+```
+
+Essentially, we compute the discriminant $\Delta$ to find valid intersections.
+The intersection we find is valid if $\Delta \ge 0$ and if it's between the 
+trajectory segment points.
+
+The full implementation can be found inside the function [find_goal_point()](https://github.com/kumaradityag/fp-control/blob/e145767ec9b8fbaf04f0cfd550c42bd7930a55fd/packages/pure_pursuit_control/include/pure_pursuit_controller/goal.py#L13)
+
+### Control Command Computation - "Follow the carrot" approach (naive)
+
+The first implementation of pure pursuit that we coded kept the linear velocity 
+constant and only accounted for the angular velocity, which was calculated 
+using the turn error between the robot heading and the goal point.
+
+We define 3 parameters:
+
+- `lookahead_distance`: Circle radius at which the duckiebot sees
+- `kp`: How hard do we want to steer the wheel upon turn error
+- `v_bar`: Linear velocity
+
+Consider the following picture,
+
+![](./assets/images/pure_pursuit_turn_angle.png)
+
+The turn error can be computed 
+
+$$\alpha = tan(\frac{y_1-y_0}{x_1 - x_0})$$
+
+Thus, 
+
+$$\omega = kp \cdot \alpha$$
+
+The code for the "carrot and stick" approach looks something like this:
+
+```{python}
+#| echo: true
+#| eval: false
+
+goal_point, _ = find_goal_point(
+    path_points,
+    self.current_pos,
+    lookahead_distance,
+    self.last_found_index,
+)
+dx, dy = (
+    goal_point[0] - self.current_pos[0],
+    goal_point[1] - self.current_pos[1],
+)
+abs_target_angle = math.atan2(dy, dx)
+turn_error = abs_target_angle - np.deg2rad(self.current_heading)
+L_d = math.sqrt(dx**2 + dy**2)
+
+v = v_bar
+omega = kp * turn_error
+```
+
+The full code implementation can be found in the function 
+[compute_control_action()](https://github.com/kumaradityag/fp-control/blob/e145767ec9b8fbaf04f0cfd550c42bd7930a55fd/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23)
+
+
+#### Results - "Follow the carrot"
+
+Althought this approach is quite simple, we found that it performed relatively 
+well with the right parameters. When driving at lower speed, the duckiebot 
+was able to turn the corner gracefully without too much oscillation. However, 
+as soon as we instruct it to drive a bit faster, 
+it wasn't very good at turning around corners, especially in the inner lane 
+due to its sharp corners.
+
+
+Outer Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1ga7rnIbhwDYizVIQUI2vUZ9cj6RG9D2b/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+Inner Loop:
+
+```{=html}
+<iframe src="https://drive.google.com/file/d/1YI_d33H-vBUEEcU9B2leVrXtq-WjtjrI/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+### Control Command Computation - Curvature-based approach
+
+In order to improve the duckiebot performance around sharp corners, we wanted 
+to adjust the linear velocity and angle velocity based on curvature. Similarly 
+to how one would drive, we want our duckie to slow down around corner and speed 
+up on when it drives straight ahead. To do so, we used a tangent based approach 
+to find the curvature.
+
+Consider the following picture:
+
+![courtesy of Purdue Sigbots](./assets/images/pure_pursuit_turn_error.png)
+
+Using trigonometry, we find that 
+
+$$R = \frac{L_d}{2 sin(\alpha)}$$
+
+
+::: {.callout-note collapse="true" title="Deriving the radius formula"}
+As seen previously, given the current pos P0(x0, y0) and the goal point 
+P1(x1, y1), the turn error $\alpha$ can be computed as 
+
+$$\alpha = tan(\frac{y_1 - y_0}{x_1 - x_0})$$
+
+Since the goal point is at distance $L_d$ of the current position, the half-way 
+point is at distance $\frac{L_d}{2}$ and thus
+
+$$R = \frac{\frac{L_d}{2}}{sin(\alpha)} = \frac{L_d}{2 sin (\alpha)}$$
+:::
+
+The curvature $k$ is defined as the inverse of the radius of the arc we want 
+the duckie to travel. Because we want the linear velocity to be inversely
+proportional to the curvature (the higher the curvature, the lower the speed), 
+we get the following formula for linear velocity
+
+$$k = \frac{1}{R}$$
+$$v = \bar{v} * \frac{1}{k} = \bar{v} * R$$
+
+To derive the angular error, now consider the diagram below:
+
+![courtesy of Purdue Sigbots](./assets/images/pure_pursuit_angular_error.png)
+
+Assuming that the robot finishes the turn after time $\delta t$, we have that 
+the left side ($L_l$) and right side ($L_R$) of the duckie turn with velocity
+
+$$
+\begin{aligned}
+L_l
+&=
+(\text{linearVel} - \text{turnVel}) \cdot \Delta t
+=
+\left( R - \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})
+\\[6pt]
+L_r
+&=
+(\text{linearVel} + \text{turnVel}) \cdot \Delta t
+=
+\left( R + \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})
+\end{aligned}
+$$
+
+Solving for turn velocity, we get that
+
+$$
+\frac{(\text{linearVel} - \text{turnVel}) \cdot \Delta t}
+     {(\text{linearVel} + \text{turnVel}) \cdot \Delta t}
+=
+\frac{\left( R - \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})}
+     {\left( R + \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})}
+$$
+
+$$
+\frac{\text{linearVel} - \text{turnVel}}
+     {\text{linearVel} + \text{turnVel}}
+=
+\frac{R - \frac{W}{2}}
+     {R + \frac{W}{2}}
+$$
+
+$$
+\left( R + \frac{W}{2} \right)\text{linearVel}
+-
+\left( R + \frac{W}{2} \right)\text{turnVel}
+=
+\left( R - \frac{W}{2} \right)\text{linearVel}
++
+\left( R - \frac{W}{2} \right)\text{turnVel}
+$$
+
+
+$$
+\text{turnVel}
+=
+\frac{W}{2R} \cdot \text{linearVel}
+$$
+
+And since $R = \frac{\text{lookaheadDistance}}{2 \sin(\text{turnError})}$, 
+the turn velocity 
+
+$$ 
+\boxed{
+\text{turnVel}
+=
+\frac{W \sin(\text{turnError})}
+     {\text{lookaheadDistance}}
+\cdot \text{linearVel}
+}
+$$
+
+Thus, our curvature-based pure pursuit approach uses 4 parameters:
+
+- `width`: width of the duckiebot chassis
+- `omega_factor`: how hard we want to turn the steering wheel, very similar to `kp`
+- `v_bar`: default velocity
+- `v_bar_min`: minimal linear velocity
+- `v_bar_max`: maximal linear velocity
+
+```{python}
+#| echo: true
+#| eval: false
+
+dx, dy = (
+    goal_point[0] - self.current_pos[0],
+    goal_point[1] - self.current_pos[1],
+)
+abs_target_angle = math.atan2(dy, dx)
+turn_error = abs_target_angle - np.deg2rad(self.current_heading)
+L_d = math.sqrt(dx**2 + dy**2)
+
+R = np.abs(L_d / (2.0 * np.sin(turn_error)))
+v = np.clip(v_bar * R, v_bar_min, v_bar_max)
+omega = omega_factor * (width * np.sin(turn_error) * v) / L_d
+```
+
+The full code can be found [here](https://github.com/kumaradityag/fp-control/blob/main/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23)
+
+#### Results - "Tangent Approach"
+
+Theoritically, the tangent approach should have yielded better results than 
+the "carrot and stick" approach, however, this wasn't what we observed. 
+After turning around the corner, the tangent approach overcorrected way more 
+than with the naive approach. Additionally, we see that the robot didn't 
+correct cross-track error and drove near some time on the line before 
+correcting for it.
+
+Outer Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1pXbwknVJrbhRgPkGaJ3Z8cl9AH0PRWUk/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+Inner Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1dap8M6RoXJU4CMMKh4Rm86MiKA9e_1ej/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+Some of these results can be explained because we changed the map on which 
+the duckie drove, which generated a worse trajectory than the test we had 
+generated prior.
+
+Trajectory Outer Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1F7V--gRNKAjZdDYyXZirzwYqiHWR51qc/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+Trajectory Inner Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1p1YS1dPKCC4cZ8kCuNYXfqpnl9Z63at6/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
