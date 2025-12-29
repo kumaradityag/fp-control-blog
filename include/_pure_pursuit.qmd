@@ -363,6 +363,13 @@ The full code can be found [here](https://github.com/kumaradityag/fp-control/blo
 
 #### Results - "Tangent Approach"
 
+Theoritically, the tangent approach should have yielded better results than 
+the "carrot and stick" approach, however, this wasn't what we observed. 
+After turning around the corner, the tangent approach overcorrected way more 
+than with the naive approach. Additionally, we see that the robot didn't 
+correct cross-track error and drove near some time on the line before 
+correcting for it.
+
 Outer Loop:
 ```{=html}
 <iframe src="https://drive.google.com/file/d/1pXbwknVJrbhRgPkGaJ3Z8cl9AH0PRWUk/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
@@ -373,5 +380,17 @@ Inner Loop:
 <iframe src="https://drive.google.com/file/d/1dap8M6RoXJU4CMMKh4Rm86MiKA9e_1ej/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
 ```
 
+Some of these results can be explained because we changed the map on which 
+the duckie drove, which generated a worse trajectory than the test we had 
+generated prior.
 
+Trajectory Outer Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1F7V--gRNKAjZdDYyXZirzwYqiHWR51qc/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+Trajectory Inner Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1p1YS1dPKCC4cZ8kCuNYXfqpnl9Z63at6/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
 
