@@ -38,10 +38,6 @@ the points where a straight line intersects the circle with radius R.
 
 ::: {.callout-note collapse="true" title="Understanding the maths behind the line-circle intersection algorithm"}
 
-Consider the following diagram
-
-TODO: make circle-line diagram
-
 Given a circle centered at the origin with radius r and points P1(x1, y1) and 
 P2(x2, y2). The implicit line equation for the closed-form geometry can be 
 written as
@@ -179,7 +175,7 @@ $$\alpha = tan(\frac{y_1-y_0}{x_1 - x_0})$$
 
 Thus, 
 
-$$\omega = kp \alpha$$
+$$\omega = kp \cdot \alpha$$
 
 The code for the "carrot and stick" approach looks something like this:
 
@@ -204,6 +200,10 @@ L_d = math.sqrt(dx**2 + dy**2)
 v = v_bar
 omega = kp * turn_error
 ```
+
+The full code implementation can be found in the function 
+[compute_control_action()](https://github.com/kumaradityag/fp-control/blob/e145767ec9b8fbaf04f0cfd550c42bd7930a55fd/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23)
+
 
 #### Results - "Follow the carrot"
 
@@ -267,11 +267,74 @@ To derive the angular error, now consider the diagram below:
 
 ![courtesy of Purdue Sigbots](./assets/images/pure_pursuit_angular_error.png)
 
-Assuming that the robot finishes the turn after time $\delta t$
+Assuming that the robot finishes the turn after time $\delta t$, we have that 
+the left side ($L_l$) and right side ($L_R$) of the duckie turn with velocity
 
-TODO: add formula for turn angle
+$$
+\begin{aligned}
+L_l
+&=
+(\text{linearVel} - \text{turnVel}) \cdot \Delta t
+=
+\left( R - \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})
+\\[6pt]
+L_r
+&=
+(\text{linearVel} + \text{turnVel}) \cdot \Delta t
+=
+\left( R + \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})
+\end{aligned}
+$$
 
-We define 4 parameters:
+Solving for turn velocity, we get that
+
+$$
+\frac{(\text{linearVel} - \text{turnVel}) \cdot \Delta t}
+     {(\text{linearVel} + \text{turnVel}) \cdot \Delta t}
+=
+\frac{\left( R - \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})}
+     {\left( R + \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})}
+$$
+
+$$
+\frac{\text{linearVel} - \text{turnVel}}
+     {\text{linearVel} + \text{turnVel}}
+=
+\frac{R - \frac{W}{2}}
+     {R + \frac{W}{2}}
+$$
+
+$$
+\left( R + \frac{W}{2} \right)\text{linearVel}
+-
+\left( R + \frac{W}{2} \right)\text{turnVel}
+=
+\left( R - \frac{W}{2} \right)\text{linearVel}
++
+\left( R - \frac{W}{2} \right)\text{turnVel}
+$$
+
+
+$$
+\text{turnVel}
+=
+\frac{W}{2R} \cdot \text{linearVel}
+$$
+
+And since $R = \frac{\text{lookaheadDistance}}{2 \sin(\text{turnError})}$, 
+the turn velocity 
+
+$$ 
+\boxed{
+\text{turnVel}
+=
+\frac{W \sin(\text{turnError})}
+     {\text{lookaheadDistance}}
+\cdot \text{linearVel}
+}
+$$
+
+Thus, our curvature-based pure pursuit approach uses 4 parameters:
 
 - `width`: width of the duckiebot chassis
 - `omega_factor`: how hard we want to turn the steering wheel, very similar to `kp`
@@ -296,10 +359,19 @@ v = np.clip(v_bar * R, v_bar_min, v_bar_max)
 omega = omega_factor * (width * np.sin(turn_error) * v) / L_d
 ```
 
-The full code implementation can be found in the function 
-[compute_control_action()](https://github.com/kumaradityag/fp-control/blob/e145767ec9b8fbaf04f0cfd550c42bd7930a55fd/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23)
+The full code can be found [here](https://github.com/kumaradityag/fp-control/blob/main/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23)
 
 #### Results - "Tangent Approach"
 
-TODO
+Outer Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1pXbwknVJrbhRgPkGaJ3Z8cl9AH0PRWUk/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+Inner Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1dap8M6RoXJU4CMMKh4Rm86MiKA9e_1ej/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+
 
