@@ -67,21 +67,21 @@ Once the parameters have been defined, the code can be launched with the
 following commands.  You will need 4 terminals to view everything needed. 
 
 In terminal 1:
-```{bash}
+```bash
 cd fp-control
 dts fleet discover
 dts matrix run --standalone --map ./assets/duckiematrix/map/loop/
 ```
 
 In terminal 2:
-```{bash}
+```bash
 dts matrix attach vbot map_0/vehicle_0
 dts devel build -H vbot -f
 dts devel run -H vbot -L lane-following
 ```
 
 In terminal 3:
-```{bash}
+```bash
 dts gui vbot
 # Wait for the entrypoint - inside it run:
 rqt_image_view
@@ -89,7 +89,7 @@ rqt_image_view
 ```
 
 In terminal 4:
-```{bash}
+```bash
 ssh duckie@vbot.local
 # After logging into your duckiebot:
 docker exec -it ros-interface bash

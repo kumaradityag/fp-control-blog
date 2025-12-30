@@ -8,7 +8,7 @@
 
 <meta name="author" content="Emulie Chhor">
 <meta name="author" content="Kumaraditya Gupta">
-<meta name="dcterms.date" content="2025-12-23">
+<meta name="dcterms.date" content="2025-12-30">
 
 <title>Lane Following using Pure Pursuit Control – Duckietown Course Project - Control</title>
 <style>
@@ -112,6 +112,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-diagram/mermaid-init.js"></script>
 <link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -163,10 +206,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#code-block" id="toc-code-block" class="nav-link" data-scroll-target="#code-block">Code Block</a></li>
   </ul></li>
-  <li><a href="#pure-pursuit-control" id="toc-pure-pursuit-control" class="nav-link" data-scroll-target="#pure-pursuit-control">Pure Pursuit Control</a></li>
+  <li><a href="#pure-pursuit-control" id="toc-pure-pursuit-control" class="nav-link" data-scroll-target="#pure-pursuit-control">Pure Pursuit Control</a>
+  <ul class="collapse">
+  <li><a href="#goal-point-calculation---line-circle-intersection-algorithm" id="toc-goal-point-calculation---line-circle-intersection-algorithm" class="nav-link" data-scroll-target="#goal-point-calculation---line-circle-intersection-algorithm">Goal Point Calculation - Line-circle intersection algorithm</a></li>
+  <li><a href="#control-command-computation---follow-the-carrot-approach-naive" id="toc-control-command-computation---follow-the-carrot-approach-naive" class="nav-link" data-scroll-target="#control-command-computation---follow-the-carrot-approach-naive">Control Command Computation - “Follow the carrot” approach (naive)</a></li>
+  <li><a href="#control-command-computation---curvature-based-approach" id="toc-control-command-computation---curvature-based-approach" class="nav-link" data-scroll-target="#control-command-computation---curvature-based-approach">Control Command Computation - Curvature-based approach</a></li>
+  </ul></li>
   <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
-  <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a></li>
+  <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a>
+  <ul class="collapse">
+  <li><a href="#understanding-the-project-architecture" id="toc-understanding-the-project-architecture" class="nav-link" data-scroll-target="#understanding-the-project-architecture">Understanding the project architecture</a></li>
+  <li><a href="#testing-the-project" id="toc-testing-the-project" class="nav-link" data-scroll-target="#testing-the-project">Testing the project</a></li>
+  </ul></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a>
+  <ul class="collapse">
+  <li><a href="#trajectory-generation-limitations" id="toc-trajectory-generation-limitations" class="nav-link" data-scroll-target="#trajectory-generation-limitations">Trajectory Generation Limitations</a></li>
+  <li><a href="#pure-pursuit-limitations" id="toc-pure-pursuit-limitations" class="nav-link" data-scroll-target="#pure-pursuit-limitations">Pure Pursuit Limitations</a></li>
+  </ul></li>
+  <li><a href="#whats-next" id="toc-whats-next" class="nav-link" data-scroll-target="#whats-next">What’s next</a>
+  <ul class="collapse">
+  <li><a href="#improve-lane-boundaries-detection" id="toc-improve-lane-boundaries-detection" class="nav-link" data-scroll-target="#improve-lane-boundaries-detection">Improve Lane Boundaries Detection</a></li>
+  <li><a href="#improve-trajectory-generation" id="toc-improve-trajectory-generation" class="nav-link" data-scroll-target="#improve-trajectory-generation">Improve Trajectory Generation</a></li>
+  </ul></li>
+  <li><a href="#improving-control-architecture" id="toc-improving-control-architecture" class="nav-link" data-scroll-target="#improving-control-architecture">Improving Control Architecture</a>
+  <ul class="collapse">
+  <li><a href="#object-detection-and-avoidance" id="toc-object-detection-and-avoidance" class="nav-link" data-scroll-target="#object-detection-and-avoidance">Object Detection and Avoidance</a></li>
+  <li><a href="#intersection-navigation" id="toc-intersection-navigation" class="nav-link" data-scroll-target="#intersection-navigation">Intersection Navigation</a></li>
+  <li><a href="#multi-agent-coordination" id="toc-multi-agent-coordination" class="nav-link" data-scroll-target="#multi-agent-coordination">Multi-Agent Coordination</a></li>
+  </ul></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.md"><i class="bi bi-file-code"></i>Github (GFM)</a></li></ul></div></nav>
 </nav>
@@ -211,7 +279,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">December 23, 2025</p>
+      <p class="date">December 30, 2025</p>
     </div>
   </div>
   
@@ -229,26 +297,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="introduction" class="level2 page-columns page-full">
+<section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>Add intro here. Here is some text. Quarto allows you to put things in the margins.</p>
-<div class="page-columns page-full"><p></p><div class="no-row-height column-margin column-container"><span class="margin-aside">This is a side note that will appear in the right margin.</span></div></div>
+<p>This project implements lane following on a Duckiebot using trajectory generation and pure pursuit control. The standard Duckietown lane-following stack estimates lane pose <span class="math inline">(d, \phi)</span> via a histogram filter and applies a PID-style controller on that estimate. In practice, the <span class="math inline">(d, \phi)</span> measurement can be noisy and discontinuous. Especially under partial occlusions, sparse lane markings, or during turns, which leads to jittery steering and reduced cornering smoothness.</p>
+<p>Instead of using <span class="math inline">(d, \phi)</span>, we use perception output (ground-projected lane segments) directly for local path construction. At each time step, we generate a <strong>centerline trajectory in the robot frame</strong>, apply temporal smoothing, and track the resulting path using <strong>pure pursuit control</strong>. This replaces explicit lane-state estimation with a path-tracking formulation: control commands are computed directly from the local trajectory, yielding smoother driving through curves.</p>
+<p>The baseline stack consists of:</p>
+<ul>
+<li><strong>Line detection:</strong> color segmentation (white/yellow/red), edge detection (Canny), and line extraction (Hough) to produce lane-marker segments in the image.</li>
+<li><strong>Ground projection:</strong> homography-based mapping from image coordinates to the ground plane using camera calibration.</li>
+<li><strong>Lane estimation:</strong> a histogram filter over <span class="math inline">(d, \phi)</span> that fuses a kinematic prediction with segment-based updates.</li>
+<li><strong>Control:</strong> PID-style steering using the estimated <span class="math inline">(d, \phi)</span>, typically with constant forward velocity and angular correction based on lateral and heading error.</li>
+</ul>
+<p>We keep <strong>line detection</strong> and <strong>ground projection</strong>, but replace the downstream modules:</p>
+<ul>
+<li><strong>Trajectory generation:</strong> compute a forward centerline path from projected segments, with robust fitting and temporal smoothing.</li>
+<li><strong>Pure pursuit control:</strong> select a lookahead goal point on the path and compute curvature/steering commands to track it.</li>
+</ul>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class="figure"><p></p>
 <div>
 <pre class="mermaid mermaid-js">flowchart LR
-  A[Hard edge] --&gt; B(Round edge)
-  B --&gt; C{Decision}
-  C --&gt; D[Result one]
-  C --&gt; E[Result two]
+  A["Camera Image"] --&gt; B["Line Detection"]
+  B --&gt; C["Ground Projection"]
+
+  subgraph Baseline_Duckietown ["Baseline Duckietown Stack"]
+    D["Lane Estimation"] --&gt; E["PID Control"]
+  end
+
+  subgraph Our_Project ["Our Project Stack"]
+    F["Trajectory Generation"] --&gt; G["Pure Pursuit Control"]
+  end
+
+  C --&gt; D
+  C --&gt; F
+  E --&gt; H["Wheel Commands"]
+  G --&gt; H
 </pre>
 </div>
 <p></p></figure><p></p>
 </div>
 </div>
 </div>
+<p>Over this project we set and achieved these three goals:</p>
+<ol type="1">
+<li>Trajectory generation from detected lane segments, including temporal smoothing for stability.</li>
+<li>Pure pursuit control on the generated trajectory.</li>
+<li>Demonstrate continuous looped driving on a real Duckiebot in the lab Duckietown.</li>
+</ol>
 </section>
 <section id="trajectory-generation" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="trajectory-generation">Trajectory Generation</h2>
@@ -265,7 +362,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div></div><section id="code-block" class="level3">
 <h3 class="anchored" data-anchor-id="code-block">Code Block</h3>
 <p>Because we enabled code folding, this big block won’t clutter the page unless the user clicks “Show Code”.</p>
-<div id="64a66c87" class="cell" data-execution_count="1">
+<div id="41b7d754" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -281,7 +378,319 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="pure-pursuit-control" class="level2">
 <h2 class="anchored" data-anchor-id="pure-pursuit-control">Pure Pursuit Control</h2>
-<p>Add information about pure pursuit here. With some figures maybe.</p>
+<p>The second part of the project focused on enhancing the controller node using the “Pure Pursuit” algorithm, which enables the robot to adjust its path before the error accumulates. Similar to PID control, pure pursuit is a steering method that computes the linear (v) and angular velocity (<span class="math inline">\omega</span>). However, instead of relying on the cross-track error (CTE), the lateral distance between the vehicle and the centerlane, it relies on the pre-computed trajectory as a reference.</p>
+<p>The pure pursuit controller consists of two keys steps:</p>
+<ol type="1">
+<li>Goal Point Computation: We determine the goal point to which the robot aims to reach</li>
+<li>Control Commands Computation: We compute the linear and angular velocity required to make the duckie reach the computed goal point</li>
+</ol>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+    A[Goal Point Computation] --&gt; B[Control Command Computation]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>If you are familiar with the “carrot and stick” analogy, pure pursuit control works fashionably in the same way: we make the robot (the donkey) move towards the goal point (the carrot), which we always keep at a distance <span class="math inline">L_d</span>, the lookahead distance. If the donkey is too far from the goal point, we “stick” it to the robot and make it turn more aggressively towards the goal point.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/-PVFBGN_zoM?si=9V-fbQ8J0mmzbZtT" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<section id="goal-point-calculation---line-circle-intersection-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="goal-point-calculation---line-circle-intersection-algorithm">Goal Point Calculation - Line-circle intersection algorithm</h3>
+<p>Many methods can be used to compute the goal point, but we decided to go with the “line-circle intersection” algorithm for its computational simplicity.</p>
+<p>Mathematically speaking, the line-circle intersection algorithm tries to find the points where a straight line intersects the circle with radius R.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Understanding the maths behind the line-circle intersection algorithm">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Understanding the maths behind the line-circle intersection algorithm
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Given a circle centered at the origin with radius r and points P1(x1, y1) and P2(x2, y2). The implicit line equation for the closed-form geometry can be written as</p>
+<p><span class="math display"> d_y x - d_x y + D = 0</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">D=x_1 y_2 - x_2 y_1</span></li>
+<li><span class="math inline">d_x = x_2 - x_1</span></li>
+<li><span class="math inline">d_y = y_2 - y_1</span></li>
+</ul>
+<p>The perpendicular projection of the origin onto the line is:</p>
+<p><span class="math display">
+\begin{aligned}
+x_0 &amp;= \frac{D d_y}{d_r^2} \\
+y_0 &amp;= \frac{-D d_x}{d_r^2}
+\end{aligned}
+</span></p>
+<p>where <span class="math inline">dr= \sqrt{dx^2 + dy^2}</span></p>
+<p>Since the closest point from the origin to the line is a perpendicular projection, we can determine the existence of the intersection using the distance from the origin to the line</p>
+<p><span class="math display">\text{dist} = \frac{|D|}{d_r}</span></p>
+<ul>
+<li>If dist &gt; r, there are no intersection</li>
+<li>If dist = r, one tangent intersection</li>
+<li>If dist &lt; r, there are two intersections</li>
+</ul>
+<p>From the right-triangle geometry, we can find the distance along the line from the closest point to each intersection, which we can use to move from the closest point forward and backward along the line</p>
+<p><span class="math display">h = \sqrt{r^2 - \left(\frac{D}{d_r}\right)^2}</span></p>
+<p>The unit direction along the line is given by</p>
+<p><span class="math display">\hat{\mathbf{u}} = \left( \frac{d_x}{d_r}, \frac{d_y}{d_r} \right)</span></p>
+<p>This gives us the formula to compute the intesection points</p>
+<p><span class="math display">
+\mathbf{P}_{1,2}
+=
+\begin{pmatrix}
+x_0 \\
+y_0
+\end{pmatrix}
+\pm
+h \,\hat{\mathbf{u}}
+</span></p>
+<!-- $$ -->
+<!-- \begin{aligned} -->
+<!-- x_0 &= \frac{D d_y}{d_r^2}, \\ -->
+<!-- y_0 &= \frac{-D d_x}{d_r^2}, \\ -->
+<!-- \hat{\mathbf{u}} &= \left( \frac{d_x}{d_r}, \frac{d_y}{d_r} \right), \\ -->
+<!-- h &= \frac{\sqrt{r^2 d_r^2 - D^2}}{d_r}. -->
+<!-- \end{aligned} -->
+<!-- $$ -->
+<p><span class="math display">
+\begin{aligned}
+x &amp;= \frac{D d_y \pm d_x \sqrt{r^2 d_r^2 - D^2}}{d_r^2} \\
+y &amp;= \frac{-D d_x \pm d_y \sqrt{r^2 d_r^2 - D^2}}{d_r^2}
+\end{aligned}
+</span></p>
+</div>
+</div>
+</div>
+<p>Since the line-circle intersection method works for two points only and the trajectory is an array of points, we need to iteratively compute the potential intersections points for contiguous segments as follows</p>
+<ul>
+<li><span class="math inline">x=\frac{D dy \pm sgn(dy) dx \sqrt{\Delta}}{L_d^2}</span></li>
+<li><span class="math inline">y=\frac{-D dx \pm \| dy \| \sqrt{\Delta}}{L_d^2}</span></li>
+</ul>
+<p>Where</p>
+<ul>
+<li><span class="math inline">dx=x_2-x_1</span></li>
+<li><span class="math inline">dy=y_2-y_1</span></li>
+<li><span class="math inline">dr= \sqrt{dx^2 + dy^2}</span></li>
+<li><span class="math inline">D=x_1 y_2 - x_2 y_1</span></li>
+<li><span class="math inline">\Delta=r^2 dr^2 - D^2</span></li>
+<li><span class="math inline">f(x) = \begin{cases} 0, &amp; x&lt;0 \\ x, &amp; x\ge 0 \end{cases}</span></li>
+</ul>
+<p>To determine the validity of the goal point computed, we can follow the following graph:</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+    A[Discriminant] -- $$\Delta$$&lt;0 --&gt; B(No intersection Found) --&gt; E;
+    A -- $$\Delta$$=0 --&gt; C(One Intersection Found);
+    A -- $$\Delta$$&gt;0 --&gt; D(Two Intersections Found);
+    E[Use last point in trajectory];
+    F(Range Check);
+    G[Select intersection closest to last goal point];
+    C -- invalid --&gt; E;
+    D -- both invalid --&gt; E;
+    D -- one invalid --&gt; C;
+    D -- both valid --&gt; G;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>Essentially, we compute the discriminant <span class="math inline">\Delta</span> to find valid intersections. The intersection we find is valid if <span class="math inline">\Delta \ge 0</span> and if it’s between the trajectory segment points.</p>
+<p>The full implementation can be found inside the function <a href="https://github.com/kumaradityag/fp-control/blob/e145767ec9b8fbaf04f0cfd550c42bd7930a55fd/packages/pure_pursuit_control/include/pure_pursuit_controller/goal.py#L13">find_goal_point()</a></p>
+</section>
+<section id="control-command-computation---follow-the-carrot-approach-naive" class="level3">
+<h3 class="anchored" data-anchor-id="control-command-computation---follow-the-carrot-approach-naive">Control Command Computation - “Follow the carrot” approach (naive)</h3>
+<p>The first implementation of pure pursuit that we coded kept the linear velocity constant and only accounted for the angular velocity, which was calculated using the turn error between the robot heading and the goal point.</p>
+<p>We define 3 parameters:</p>
+<ul>
+<li><code>lookahead_distance</code>: Circle radius at which the duckiebot sees</li>
+<li><code>kp</code>: How hard do we want to steer the wheel upon turn error</li>
+<li><code>v_bar</code>: Linear velocity</li>
+</ul>
+<p>Consider the following picture,</p>
+<p><img src="./assets/images/pure_pursuit_turn_angle.png" class="img-fluid"></p>
+<p>The turn error can be computed</p>
+<p><span class="math display">\alpha = tan(\frac{y_1-y_0}{x_1 - x_0})</span></p>
+<p>Thus,</p>
+<p><span class="math display">\omega = kp \cdot \alpha</span></p>
+<p>The code for the “carrot and stick” approach looks something like this:</p>
+<div id="22954be0" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>goal_point, _ <span class="op">=</span> find_goal_point(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    path_points,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.current_pos,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    lookahead_distance,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.last_found_index,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>dx, dy <span class="op">=</span> (</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    goal_point[<span class="dv">0</span>] <span class="op">-</span> <span class="va">self</span>.current_pos[<span class="dv">0</span>],</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    goal_point[<span class="dv">1</span>] <span class="op">-</span> <span class="va">self</span>.current_pos[<span class="dv">1</span>],</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>abs_target_angle <span class="op">=</span> math.atan2(dy, dx)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>turn_error <span class="op">=</span> abs_target_angle <span class="op">-</span> np.deg2rad(<span class="va">self</span>.current_heading)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>L_d <span class="op">=</span> math.sqrt(dx<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> dy<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>v <span class="op">=</span> v_bar</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>omega <span class="op">=</span> kp <span class="op">*</span> turn_error</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>The full code implementation can be found in the function <a href="https://github.com/kumaradityag/fp-control/blob/e145767ec9b8fbaf04f0cfd550c42bd7930a55fd/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23">compute_control_action()</a></p>
+<section id="results---follow-the-carrot" class="level4">
+<h4 class="anchored" data-anchor-id="results---follow-the-carrot">Results - “Follow the carrot”</h4>
+<p>Althought this approach is quite simple, we found that it performed relatively well with the right parameters. When driving at lower speed, the duckiebot was able to turn the corner gracefully without too much oscillation. However, as soon as we instruct it to drive a bit faster, it wasn’t very good at turning around corners, especially in the inner lane due to its sharp corners.</p>
+<p>Outer Loop:</p>
+<iframe src="https://drive.google.com/file/d/1ga7rnIbhwDYizVIQUI2vUZ9cj6RG9D2b/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+<p>Inner Loop:</p>
+<iframe src="https://drive.google.com/file/d/1YI_d33H-vBUEEcU9B2leVrXtq-WjtjrI/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+</section>
+</section>
+<section id="control-command-computation---curvature-based-approach" class="level3">
+<h3 class="anchored" data-anchor-id="control-command-computation---curvature-based-approach">Control Command Computation - Curvature-based approach</h3>
+<p>In order to improve the duckiebot performance around sharp corners, we wanted to adjust the linear velocity and angle velocity based on curvature. Similarly to how one would drive, we want our duckie to slow down around corner and speed up on when it drives straight ahead. To do so, we used a tangent based approach to find the curvature.</p>
+<p>Consider the following picture:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="./assets/images/pure_pursuit_turn_error.png" class="img-fluid figure-img"></p>
+<figcaption>courtesy of Purdue Sigbots</figcaption>
+</figure>
+</div>
+<p>Using trigonometry, we find that</p>
+<p><span class="math display">R = \frac{L_d}{2 sin(\alpha)}</span></p>
+<div class="callout callout-style-default callout-note callout-titled" title="Deriving the radius formula">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Deriving the radius formula
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>As seen previously, given the current pos P0(x0, y0) and the goal point P1(x1, y1), the turn error <span class="math inline">\alpha</span> can be computed as</p>
+<p><span class="math display">\alpha = tan(\frac{y_1 - y_0}{x_1 - x_0})</span></p>
+<p>Since the goal point is at distance <span class="math inline">L_d</span> of the current position, the half-way point is at distance <span class="math inline">\frac{L_d}{2}</span> and thus</p>
+<p><span class="math display">R = \frac{\frac{L_d}{2}}{sin(\alpha)} = \frac{L_d}{2 sin (\alpha)}</span></p>
+</div>
+</div>
+</div>
+<p>The curvature <span class="math inline">k</span> is defined as the inverse of the radius of the arc we want the duckie to travel. Because we want the linear velocity to be inversely proportional to the curvature (the higher the curvature, the lower the speed), we get the following formula for linear velocity</p>
+<p><span class="math display">k = \frac{1}{R}</span> <span class="math display">v = \bar{v} * \frac{1}{k} = \bar{v} * R</span></p>
+<p>To derive the angular error, now consider the diagram below:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="./assets/images/pure_pursuit_angular_error.png" class="img-fluid figure-img"></p>
+<figcaption>courtesy of Purdue Sigbots</figcaption>
+</figure>
+</div>
+<p>Assuming that the robot finishes the turn after time <span class="math inline">\delta t</span>, we have that the left side (<span class="math inline">L_l</span>) and right side (<span class="math inline">L_R</span>) of the duckie turn with velocity</p>
+<p><span class="math display">
+\begin{aligned}
+L_l
+&amp;=
+(\text{linearVel} - \text{turnVel}) \cdot \Delta t
+=
+\left( R - \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})
+\\[6pt]
+L_r
+&amp;=
+(\text{linearVel} + \text{turnVel}) \cdot \Delta t
+=
+\left( R + \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})
+\end{aligned}
+</span></p>
+<p>Solving for turn velocity, we get that</p>
+<p><span class="math display">
+\frac{(\text{linearVel} - \text{turnVel}) \cdot \Delta t}
+     {(\text{linearVel} + \text{turnVel}) \cdot \Delta t}
+=
+\frac{\left( R - \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})}
+     {\left( R + \frac{W}{2} \right) \cdot (2 \cdot \text{turnError})}
+</span></p>
+<p><span class="math display">
+\frac{\text{linearVel} - \text{turnVel}}
+     {\text{linearVel} + \text{turnVel}}
+=
+\frac{R - \frac{W}{2}}
+     {R + \frac{W}{2}}
+</span></p>
+<p><span class="math display">
+\left( R + \frac{W}{2} \right)\text{linearVel}
+-
+\left( R + \frac{W}{2} \right)\text{turnVel}
+=
+\left( R - \frac{W}{2} \right)\text{linearVel}
++
+\left( R - \frac{W}{2} \right)\text{turnVel}
+</span></p>
+<p><span class="math display">
+\text{turnVel}
+=
+\frac{W}{2R} \cdot \text{linearVel}
+</span></p>
+<p>And since <span class="math inline">R = \frac{\text{lookaheadDistance}}{2 \sin(\text{turnError})}</span>, the turn velocity</p>
+<p><span class="math display">
+\boxed{
+\text{turnVel}
+=
+\frac{W \sin(\text{turnError})}
+     {\text{lookaheadDistance}}
+\cdot \text{linearVel}
+}
+</span></p>
+<p>Thus, our curvature-based pure pursuit approach uses 4 parameters:</p>
+<ul>
+<li><code>width</code>: width of the duckiebot chassis</li>
+<li><code>omega_factor</code>: how hard we want to turn the steering wheel, very similar to <code>kp</code></li>
+<li><code>v_bar</code>: default velocity</li>
+<li><code>v_bar_min</code>: minimal linear velocity</li>
+<li><code>v_bar_max</code>: maximal linear velocity</li>
+</ul>
+<div id="584f008e" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dx, dy <span class="op">=</span> (</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    goal_point[<span class="dv">0</span>] <span class="op">-</span> <span class="va">self</span>.current_pos[<span class="dv">0</span>],</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    goal_point[<span class="dv">1</span>] <span class="op">-</span> <span class="va">self</span>.current_pos[<span class="dv">1</span>],</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>abs_target_angle <span class="op">=</span> math.atan2(dy, dx)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>turn_error <span class="op">=</span> abs_target_angle <span class="op">-</span> np.deg2rad(<span class="va">self</span>.current_heading)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>L_d <span class="op">=</span> math.sqrt(dx<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> dy<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>R <span class="op">=</span> np.<span class="bu">abs</span>(L_d <span class="op">/</span> (<span class="fl">2.0</span> <span class="op">*</span> np.sin(turn_error)))</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>v <span class="op">=</span> np.clip(v_bar <span class="op">*</span> R, v_bar_min, v_bar_max)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>omega <span class="op">=</span> omega_factor <span class="op">*</span> (width <span class="op">*</span> np.sin(turn_error) <span class="op">*</span> v) <span class="op">/</span> L_d</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>The full code can be found <a href="https://github.com/kumaradityag/fp-control/blob/main/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23">here</a></p>
+<section id="results---tangent-approach" class="level4">
+<h4 class="anchored" data-anchor-id="results---tangent-approach">Results - “Tangent Approach”</h4>
+<p>Theoritically, the tangent approach should have yielded better results than the “carrot and stick” approach, however, this wasn’t what we observed. After turning around the corner, the tangent approach overcorrected way more than with the naive approach. Additionally, we see that the robot didn’t correct cross-track error and drove near some time on the line before correcting for it.</p>
+<p>Outer Loop:</p>
+<iframe src="https://drive.google.com/file/d/1pXbwknVJrbhRgPkGaJ3Z8cl9AH0PRWUk/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+<p>Inner Loop:</p>
+<iframe src="https://drive.google.com/file/d/1dap8M6RoXJU4CMMKh4Rm86MiKA9e_1ej/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+<p>Some of these results can be explained because we changed the map on which the duckie drove, which generated a worse trajectory than the test we had generated prior.</p>
+<p>Trajectory Outer Loop:</p>
+<iframe src="https://drive.google.com/file/d/1F7V--gRNKAjZdDYyXZirzwYqiHWR51qc/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+<p>Trajectory Inner Loop:</p>
+<iframe src="https://drive.google.com/file/d/1p1YS1dPKCC4cZ8kCuNYXfqpnl9Z63at6/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+</section>
+</section>
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">Results</h2>
@@ -289,17 +698,106 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="testing" class="level2">
 <h2 class="anchored" data-anchor-id="testing">Testing</h2>
-<p>Steps to reproduce our results.</p>
-<p>Clone the project GitHub repository</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone git@github.com:kumaradityag/fp-control</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>To test the code, first clone the project GitHub repository and follow the steps defined in the <code>README.md</code> file.</p>
+<pre class="{bash}"><code>git clone git@github.com:kumaradityag/fp-control</code></pre>
+<p>If you followed all the steps in the <code>README.md</code> file, you should have the following: - You have cloned the repo - You have installed the duckietown-shell. You can verify that you have sucessfully installed it using <code>dts --version</code>. If that’s not the case, please follow the instructions <a href="https://docs.duckietown.com/daffy/opmanual-duckiebot/setup/setup_laptop/setup_dt_shell.html">here</a> - You have created your virtual duckiebot. You can verify that your virtual duckie exists with the command <code>dts duckiebot virtual start vbot</code> and then <code>dts fleet discover</code>. <code>vbot</code> is the name of our virtual duckie, but feel free to replace it with your own virtual duckie name - You have your real life robot. This step is only required if you want to test the demo in real life. If you want to get your duckie hardware, see the official documentation <a href="https://docs.duckietown.com/daffy/opmanual-duckiebot/preliminaries_hardware/get_hardware/index.html">here</a></p>
+<section id="understanding-the-project-architecture" class="level3">
+<h3 class="anchored" data-anchor-id="understanding-the-project-architecture">Understanding the project architecture</h3>
+<p>The most important directories of our projects are <code>packages/trajectory_planner</code> and <code>packages/pure_pursuit_control</code>, which are where our trajectory generation code and our pure pursuit code live.</p>
+</section>
+<section id="testing-the-project" class="level3">
+<h3 class="anchored" data-anchor-id="testing-the-project">Testing the project</h3>
+<p>Virtual and physical duckie have different wheel friction and mass distribution, so they respond to the same parameters differently. Additionally, driving in the inner or outter lane also require different parameters. Therefore, you will probably need to tune your parameters for your own duckiebot.</p>
+<p>The configs for the trajectory planner and the pure pursuit controller can be found respectively inside <code>packages/trajectory_planner/config/trajectory_planner_node/default.yaml</code> and <code>packages/pure_pursuit_control/config/pure_pursuit_control_node/default.yaml</code>.</p>
+<p>The trajectory planner node has the following parameters: - <code>min_forward</code>: minimum distance at which we consider trajectory points - <code>max_forward</code>: maximum distance at which we consider trajectory points - <code>n_samples</code>: number of samples used for ransac - <code>lane_width</code>: width of the lane in meters - <code>epsilon</code>: error around lane width - <code>yellow_pts_threshold</code>: minimum points in the trajectory for the yellow lane to be valid - <code>white_pts_threshold</code>: minimum points in the trajectory for the white lane to be valid - <code>default_mode</code>: relying on WHITE/YELLOW lane - <code>ransac_max_iterations</code>: number of iterations for ransac to compute inliers - <code>ransac_distance_threshold</code>: how far should ransac sample the points from (in m) - <code>poly_degree</code>: polynomial degree for ransac - <code>buffer_size</code>: number of previous trajectory saved in buffer - <code>buffer_smooth_alpha</code>: float number between 0-1 used to smooth out current trajectory based on the previous one - <code>buffer_theta_threshold</code>: theta angle for which in degrees</p>
+<p>The pure pursuit control node has the following parameters: - <code>lookahead_distance</code>: distance at which the pure pursuit controller look ahead (in cm) - <code>v_bar</code>: linear velocity - <code>v_bar_max</code>: maximal linear velocity - <code>v_bar_min</code>: minimal linear velocity - <code>width</code>: chassis width of the duckie. Should stay 0.1 - <code>omega_factor</code>: how hard we want the duckie to turn</p>
+<section id="launching-the-code" class="level4">
+<h4 class="anchored" data-anchor-id="launching-the-code">Launching the code</h4>
+<p>Once the parameters have been defined, the code can be launched with the following commands. You will need 4 terminals to view everything needed.</p>
+<p>In terminal 1:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> fp-control</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> fleet discover</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> matrix run <span class="at">--standalone</span> <span class="at">--map</span> ./assets/duckiematrix/map/loop/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>In terminal 2:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> matrix attach vbot map_0/vehicle_0</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel build <span class="at">-H</span> vbot <span class="at">-f</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> vbot <span class="at">-L</span> lane-following</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>In terminal 3:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> gui vbot</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Wait for the entrypoint - inside it run:</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">rqt_image_view</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Go to /trajectory_planner to see generated trajectory</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>In terminal 4:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> duckie@vbot.local</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># After logging into your duckiebot:</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> exec <span class="at">-it</span> ros-interface bash</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Some tips: - Instead of re-building the code every time we change the parameters in terminal 2, we can use the command <code>rosparam set &lt;param_name&gt; &lt;value&gt;</code>. The list of params can be found with <code>rosparam list | grep &lt;param_name&gt;</code> - To override the duckie commands, you can open a fifth terminal and use the keyboard control with <code>dts duckiebot keyboard_control vbot</code>. To make the duckie stop, you can click on “emergency stop”.</p>
+</section>
+<section id="testing-the-project-on-the-virtual-duckie" class="level4">
+<h4 class="anchored" data-anchor-id="testing-the-project-on-the-virtual-duckie">Testing the project on the virtual duckie</h4>
+<p><strong>Parameters to drive on the outer lane</strong></p>
+<p>TBD</p>
+<p><strong>Parameters to drive on the inner lane</strong></p>
+<p>TBD</p>
+</section>
+<section id="testing-the-project-on-the-physical-duckie" class="level4">
+<h4 class="anchored" data-anchor-id="testing-the-project-on-the-physical-duckie">Testing the project on the physical duckie</h4>
+<p><strong>Parameters to drive on the outer lane</strong></p>
+<p>TBD</p>
+<p><strong>Parameters to drive on the inner lane</strong></p>
+<p>TBD</p>
+</section>
+</section>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>Add info about what we learnt and how to move forward.</p>
+</section>
+<section id="limitations" class="level2">
+<h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
+<p>Although our pure pursuit method performed quite well in simulation, its performance in the physical world has substantial room for improvement. The gap between simulation and reality exposed fundamental weaknesses in both our trajectory generation and control algorithms.</p>
+<section id="trajectory-generation-limitations" class="level3">
+<h3 class="anchored" data-anchor-id="trajectory-generation-limitations">Trajectory Generation Limitations</h3>
+<p>Our trajectory generation is still not robust to sensor noise and environmental variability in the real world. This fragility becomes evident when comparing the real-world performance on the closed inner-loop map and the intersection map. While the duckiebot provided consistent lane boundaries in the virtual environment, our outlier rejection mechanism failed to adequately filter out incorrect lane boundaries introduced by lightning variation and occlusions that occur in the real world, making the trajectory generation algorithm include incorrect boundary detection into its trajectory generation.</p>
+<p>Additionally, we saw that the RANSAC line fitting algorithm performance is highly dependent on the parameters being given. The inlier and yellow points threshold required manual tuning for each distinct scenario: the parameters proved effective for inner-loop failed on the outer-loop, forcing us to maintain distinct parameter configuration for different maps, making this approach impractical when dealing with unknown environments. A particularly challenging issue emerged with our inner-loop vs outer-loop boundary selection strategy. Currently, we rely on the inner-boundary (yellow) when driving on the inner lane whereas we rely on the outer-boundary (white) when driving on the outer lane, but real-world scenarios demand dynamic boundary selection. An ideal solution would be to select the most trustworthy boundary based on some quality metrics.</p>
+</section>
+<section id="pure-pursuit-limitations" class="level3">
+<h3 class="anchored" data-anchor-id="pure-pursuit-limitations">Pure Pursuit Limitations</h3>
+<p>Despite its computationally efficient, the pure pursuit controller’s performance is highly sensitive to the lookahead distance parameter and greatly impacts our system behavior. Insufficient lookahead distance induces oscillations and overesteering response around minor errors whereas excessive lookahead distance causes aggressive corner-cutting. An adaptive lookahead strategy, where lookahead would be adjusted based on vehicle speed, path curvature and cross-track error performance would address this rigid approach.</p>
+<p>More importantly, pure pursuit fundamental flaws lie in its assumption of instantaneous command execution. While this assumption remains somewhat true in simulation, this premise crumbles when the duckie enters the physical world. The robot exhibits non-negligible actuators delay (around 150-200ms from command to execution) and doesn’t account for tire slip that may occur at moderate speed. When faced with sharp maneuvers, the vehicle’s delayed response accumulates tracking error, prompting the controller to correct itself aggressively. This feedback pattern produces jerky driving behavior, which wouldn’t occur in an experienced human driver.</p>
+<p>Our attempt at a dynamic control strategy through curvature-based velocity modulation only saw marginal improvements: the duckiebot continued to exhibit harsh braking around tight corners and aggressive acceleration upon exit. This nauseating driving behavior can be explained by the controller’s single optimization objective: minimizing its geometric deviation from the reference path. The controller possesses no notion of passenger comfort and doesn’t adhere to predictable driving norms, which are all behavior needed to drive safely on the road.</p>
+</section>
+</section>
+<section id="whats-next" class="level2">
+<h2 class="anchored" data-anchor-id="whats-next">What’s next</h2>
+<p>While our project successfully demonstrated lane-following in a closed loop environment, numerous opportunities exist to extend this foundation toward more robust and sophisticated autonomous navigation. We identified several directions for future development:</p>
+<section id="improve-lane-boundaries-detection" class="level3">
+<h3 class="anchored" data-anchor-id="improve-lane-boundaries-detection">Improve Lane Boundaries Detection</h3>
+<p>We have seen that the current lane boundary detection is still not robust to outliers due to occlusion and lightning variation. Several strategies could be implemented to improve robustness. Temporal filtering could be leveraged to exploit the sequential nature of video suppress transient noise across consecutive frames. Region of interest masking could also be applied to constraint detection only around the region where lanes are expected to appear, which would reduce false positives coming from ceiling and irrelevant background elements. Most importantly, Bayesian filtering such as Kalman filters could be applied to maintain a probabilistic belief for the lane positions and orientation over time. This approach would enable the duckie to “remember” the lane boundaries during a brief occlusion.</p>
+</section>
+<section id="improve-trajectory-generation" class="level3">
+<h3 class="anchored" data-anchor-id="improve-trajectory-generation">Improve Trajectory Generation</h3>
+<p>The current RANSAC-based approach only minimize geometrical error and doesn’t account for jerky trajectories. Quadratic programming (QP) could be implemented to minimize for both the geometrical error and jerk behavior by defining constraints around velocity, acceleration and curvature limits.</p>
+</section>
+</section>
+<section id="improving-control-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="improving-control-architecture">Improving Control Architecture</h2>
+<p>Pure pursuit works relatively well when we need to control around corner, but only takes into account heading error for more stable control. A naive improvement would be to include both PID and pure pursuit idea and include both cross-track error and heading error, something which Stanley control does quite well. Theoretically, Stanley control would be more stable at higher and lower speed because it would naturally transition between behaviors based on velocity: the heading term would dominate on higher speed and would gradually transition to CTE as it slows down.</p>
+<section id="object-detection-and-avoidance" class="level3">
+<h3 class="anchored" data-anchor-id="object-detection-and-avoidance">Object Detection and Avoidance</h3>
+<p>Implementing pedestrian detection and integrating dynamic obstacle avoidance would be the first step toward context-aware navigation. Pedestrian detection could be solved using modern deep learning architecture such as YOLO or MobileNet while dynamic obstacle avoidance could be implemented using the Dynamic Window Approach (DWA). DWA samples commands and simulate their execution over a short horizon and selects the command which maximize progress toward the goal point while keeping the trajectory collision-free.</p>
+</section>
+<section id="intersection-navigation" class="level3">
+<h3 class="anchored" data-anchor-id="intersection-navigation">Intersection Navigation</h3>
+<p>The second step towards context-aware navigation is to make the duckiebot drive around maps with intersections and introduces new challenges: stop line detection and turn signal interpretation. Successful behavior planning requires multi-stage hierarchical maneuver planning in order to plan what the duckie needs to do next: stop at the line, wait for traffic to clear, turn right, change lane, …</p>
+</section>
+<section id="multi-agent-coordination" class="level3">
+<h3 class="anchored" data-anchor-id="multi-agent-coordination">Multi-Agent Coordination</h3>
+<p>The last step towards context-aware navigation is to add coordination inside the system, that is to make the duckiebot drive around other vehicles. Coordination requires a communication architecture for specific situations, mainly around intersection and traffic light. Simple heuristics around common driving courtesy (no hard breaks, FIFO at 4 points intersection, …) could first be implemented and then decentralized coordination second.</p>
 
 
 <!-- -->
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -754,41 +1252,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Lane Following using Pure Pursuit Control"</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> </span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: "Emulie Chhor"</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: "Université de Montréal"</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: "Kumaraditya Gupta"</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: "Université de Montréal and Mila"</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> today</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="an">abstract:</span><span class="co"> "This is a summary of our project results..."</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_introduction.qmd &gt;}}</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## Trajectory Generation</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_trajectory_generation.qmd &gt;}}</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## Pure Pursuit Control</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_pure_pursuit.qmd &gt;}}</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="fu">## Results</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_results.qmd &gt;}}</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="fu">## Testing</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_testing.qmd &gt;}}</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="fu">## Conclusion</span></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_conclusion.qmd &gt;}}</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Lane Following using Pure Pursuit Control"</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> </span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: "Emulie Chhor"</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: "Université de Montréal"</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: "Kumaraditya Gupta"</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: "Université de Montréal and Mila"</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> today</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="an">abstract:</span><span class="co"> "This is a summary of our project results..."</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_introduction.qmd &gt;}}</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## Trajectory Generation</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_trajectory_generation.qmd &gt;}}</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## Pure Pursuit Control</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_pure_pursuit.qmd &gt;}}</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="fu">## Results</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_results.qmd &gt;}}</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="fu">## Testing</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_testing.qmd &gt;}}</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="fu">## Conclusion</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>{{&lt; include ./include/_conclusion.qmd &gt;}}</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
