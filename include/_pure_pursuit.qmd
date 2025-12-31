@@ -106,8 +106,8 @@ $$
 :::
 
 Since the line-circle intersection method works for two points only and the 
-trajectory is an array of points, we need to iteratively compute the potential 
-intersections points for contiguous segments as follows
+trajectory is an array of points, given two consecutive trajectory points 
+P1(x1, y2) and P2(x2, y2), the goal point P(x, y) can be found as follows:
 
 - $x=\frac{D dy \pm sgn(dy) dx \sqrt{\Delta}}{L_d^2}$
 - $y=\frac{-D dx \pm \| dy \| \sqrt{\Delta}}{L_d^2}$
@@ -306,7 +306,7 @@ $$
 Thus, our curvature-based pure pursuit approach uses 4 parameters:
 
 - `width`: width of the duckiebot chassis
-- `omega_factor`: how hard we want to turn the steering wheel, very similar to `kp`
+- `omega_factor`: how hard we want to turn the steering wheel, very similar to `kp_steering`
 - `v_bar`: default velocity
 - `v_bar_min`: minimal linear velocity
 - `v_bar_max`: maximal linear velocity
