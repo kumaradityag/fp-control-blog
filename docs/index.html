@@ -8,7 +8,7 @@
 
 <meta name="author" content="Emulie Chhor">
 <meta name="author" content="Kumaraditya Gupta">
-<meta name="dcterms.date" content="2025-12-30">
+<meta name="dcterms.date" content="2025-12-31">
 
 <title>Lane Following using Pure Pursuit Control – Duckietown Course Project - Control</title>
 <style>
@@ -274,7 +274,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">December 30, 2025</p>
+      <p class="date">December 31, 2025</p>
     </div>
   </div>
   
@@ -421,7 +421,7 @@ y^{\text{sm}}_{t} = \alpha*y_{t} + (1-\alpha)*y^{\text{sm}}_{t-1},
 </div>
 </div>
 </div>
-<p>If you are familiar with the “carrot and stick” analogy, pure pursuit control works fashionably in the same way: we make the robot (the donkey) move towards the goal point (the carrot), which we always keep at a distance <span class="math inline">L_d</span>, the lookahead distance. If the donkey is too far from the goal point, we “stick” it to the robot and make it turn more aggressively towards the goal point.</p>
+<p>If you are familiar with the “follow the carrot” analogy, pure pursuit control works fashionably in the same way: we make the robot (the donkey) move towards the goal point (the carrot), which we always keep at a distance <span class="math inline">L_d</span>, the lookahead distance. If the donkey is too far from the goal point, we “stick” it to the robot and make it turn more aggressively towards the goal point.</p>
 <div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/-PVFBGN_zoM?si=9V-fbQ8J0mmzbZtT" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
 <section id="goal-point-calculation---line-circle-intersection-algorithm" class="level3">
 <h3 class="anchored" data-anchor-id="goal-point-calculation---line-circle-intersection-algorithm">Goal Point Calculation - Line-circle intersection algorithm</h3>
@@ -486,7 +486,7 @@ y &amp;= \frac{-D d_x \pm d_y \sqrt{r^2 d_r^2 - D^2}}{d_r^2}
 </div>
 </div>
 </div>
-<p>Since the line-circle intersection method works for two points only and the trajectory is an array of points, we need to iteratively compute the potential intersections points for contiguous segments as follows</p>
+<p>Since the line-circle intersection method works for two points only and the trajectory is an array of points, given two consecutive trajectory points P1(x1, y2) and P2(x2, y2), the goal point P(x, y) can be found as follows:</p>
 <ul>
 <li><span class="math inline">x=\frac{D dy \pm sgn(dy) dx \sqrt{\Delta}}{L_d^2}</span></li>
 <li><span class="math inline">y=\frac{-D dx \pm \| dy \| \sqrt{\Delta}}{L_d^2}</span></li>
@@ -532,7 +532,7 @@ y &amp;= \frac{-D d_x \pm d_y \sqrt{r^2 d_r^2 - D^2}}{d_r^2}
 <p>We define 3 parameters:</p>
 <ul>
 <li><code>lookahead_distance</code>: Circle radius at which the duckiebot sees</li>
-<li><code>kp</code>: How hard do we want to steer the wheel upon turn error</li>
+<li><code>kp_steering</code>: How hard do we want to steer the wheel upon turn error</li>
 <li><code>v_bar</code>: Linear velocity</li>
 </ul>
 <p>Consider the following picture,</p>
@@ -540,9 +540,9 @@ y &amp;= \frac{-D d_x \pm d_y \sqrt{r^2 d_r^2 - D^2}}{d_r^2}
 <p>The turn error can be computed</p>
 <p><span class="math display">\alpha = tan(\frac{y_1-y_0}{x_1 - x_0})</span></p>
 <p>Thus,</p>
-<p><span class="math display">\omega = kp \cdot \alpha</span></p>
-<p>The code for the “carrot and stick” approach looks something like this:</p>
-<div id="4a44d664" class="cell" data-execution_count="1">
+<p><span class="math display">\omega = \text{kp\_sterring} \cdot \alpha</span></p>
+<p>The code for the “follow the carrot” approach looks something like this:</p>
+<div id="23bc3a8f" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>goal_point, _ <span class="op">=</span> find_goal_point(</span>
@@ -560,7 +560,7 @@ y &amp;= \frac{-D d_x \pm d_y \sqrt{r^2 d_r^2 - D^2}}{d_r^2}
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>L_d <span class="op">=</span> math.sqrt(dx<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> dy<span class="op">**</span><span class="dv">2</span>)</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>v <span class="op">=</span> v_bar</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>omega <span class="op">=</span> kp <span class="op">*</span> turn_error</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>omega <span class="op">=</span> kp_steering <span class="op">*</span> turn_error</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <p>The full code implementation can be found in the function <a href="https://github.com/kumaradityag/fp-control/blob/e145767ec9b8fbaf04f0cfd550c42bd7930a55fd/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23">compute_control_action()</a></p>
@@ -663,12 +663,12 @@ L_r
 <p>Thus, our curvature-based pure pursuit approach uses 4 parameters:</p>
 <ul>
 <li><code>width</code>: width of the duckiebot chassis</li>
-<li><code>omega_factor</code>: how hard we want to turn the steering wheel, very similar to <code>kp</code></li>
+<li><code>omega_factor</code>: how hard we want to turn the steering wheel, very similar to <code>kp_steering</code></li>
 <li><code>v_bar</code>: default velocity</li>
 <li><code>v_bar_min</code>: minimal linear velocity</li>
 <li><code>v_bar_max</code>: maximal linear velocity</li>
 </ul>
-<div id="295ea355" class="cell" data-execution_count="2">
+<div id="1a492faa" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dx, dy <span class="op">=</span> (</span>
@@ -761,18 +761,22 @@ L_r
 <h4 class="anchored" data-anchor-id="run-the-carrot-approach">Run the carrot approach</h4>
 <p>In terminal 1:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For physical duckie</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-carrot</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># For virtual duckie</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-carrot-virtual</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-carrot-physical-outer</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-carrot-physical-inner</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># For virtual duckie</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-carrot-virtual-outer</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-carrot-virtual-inner</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="run-the-tangent-approach" class="level4">
 <h4 class="anchored" data-anchor-id="run-the-tangent-approach">Run the tangent approach</h4>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For physical duckie</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># For virtual duckie</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-virtual</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-tangent-physical-outer</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-tangent-physical-inner</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># For virtual duckie</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-tangent-virtual-outer</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dts</span> devel run <span class="at">-H</span> <span class="va">$ROBOT_NAME</span> <span class="at">-L</span> lane-following-tangent-virtual-inner</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="config-descriptions" class="level3">

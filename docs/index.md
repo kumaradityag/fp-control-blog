@@ -1,6 +1,6 @@
 # Lane Following using Pure Pursuit Control
 Emulie Chhor, Kumaraditya Gupta
-2025-12-30
+2025-12-31
 
 ## Introduction
 
@@ -206,7 +206,7 @@ flowchart LR
     A[Goal Point Computation] --> B[Control Command Computation]
 ```
 
-If you are familiar with the “carrot and stick” analogy, pure pursuit
+If you are familiar with the “follow the carrot” analogy, pure pursuit
 control works fashionably in the same way: we make the robot (the
 donkey) move towards the goal point (the carrot), which we always keep
 at a distance $L_d$, the lookahead distance. If the donkey is too far
@@ -293,8 +293,9 @@ R.
 > $$
 
 Since the line-circle intersection method works for two points only and
-the trajectory is an array of points, we need to iteratively compute the
-potential intersections points for contiguous segments as follows
+the trajectory is an array of points, given two consecutive trajectory
+points P1(x1, y2) and P2(x2, y2), the goal point P(x, y) can be found as
+follows:
 
 - $x=\frac{D dy \pm sgn(dy) dx \sqrt{\Delta}}{L_d^2}$
 - $y=\frac{-D dx \pm \| dy \| \sqrt{\Delta}}{L_d^2}$
@@ -342,7 +343,7 @@ point.
 We define 3 parameters:
 
 - `lookahead_distance`: Circle radius at which the duckiebot sees
-- `kp`: How hard do we want to steer the wheel upon turn error
+- `kp_steering`: How hard do we want to steer the wheel upon turn error
 - `v_bar`: Linear velocity
 
 Consider the following picture,
@@ -355,9 +356,9 @@ $$\alpha = tan(\frac{y_1-y_0}{x_1 - x_0})$$
 
 Thus,
 
-$$\omega = kp \cdot \alpha$$
+$$\omega = \text{kp\_sterring} \cdot \alpha$$
 
-The code for the “carrot and stick” approach looks something like this:
+The code for the “follow the carrot” approach looks something like this:
 
 ``` python
 goal_point, _ = find_goal_point(
@@ -375,7 +376,7 @@ turn_error = abs_target_angle - np.deg2rad(self.current_heading)
 L_d = math.sqrt(dx**2 + dy**2)
 
 v = v_bar
-omega = kp * turn_error
+omega = kp_steering * turn_error
 ```
 
 The full code implementation can be found in the function
@@ -496,7 +497,7 @@ Thus, our curvature-based pure pursuit approach uses 4 parameters:
 
 - `width`: width of the duckiebot chassis
 - `omega_factor`: how hard we want to turn the steering wheel, very
-  similar to `kp`
+  similar to `kp_steering`
 - `v_bar`: default velocity
 - `v_bar_min`: minimal linear velocity
 - `v_bar_max`: maximal linear velocity
@@ -675,20 +676,24 @@ In terminal 1:
 
 ``` bash
 # For physical duckie
-dts devel run -H $ROBOT_NAME -L lane-following-carrot
+dts devel run -H $ROBOT_NAME -L lane-following-carrot-physical-outer
+dts devel run -H $ROBOT_NAME -L lane-following-carrot-physical-inner
 
 # For virtual duckie
-dts devel run -H $ROBOT_NAME -L lane-following-carrot-virtual
+dts devel run -H $ROBOT_NAME -L lane-following-carrot-virtual-outer
+dts devel run -H $ROBOT_NAME -L lane-following-carrot-virtual-inner
 ```
 
 #### Run the tangent approach
 
 ``` bash
 # For physical duckie
-dts devel run -H $ROBOT_NAME -L lane-following
+dts devel run -H $ROBOT_NAME -L lane-following-tangent-physical-outer
+dts devel run -H $ROBOT_NAME -L lane-following-tangent-physical-inner
 
 # For virtual duckie
-dts devel run -H $ROBOT_NAME -L lane-following-virtual
+dts devel run -H $ROBOT_NAME -L lane-following-tangent-virtual-outer
+dts devel run -H $ROBOT_NAME -L lane-following-tangent-virtual-inner
 ```
 
 ### Config Descriptions
