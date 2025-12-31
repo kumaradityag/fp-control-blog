@@ -95,15 +95,6 @@ y_0
 h \,\hat{\mathbf{u}}
 $$
 
-<!-- $$ -->
-<!-- \begin{aligned} -->
-<!-- x_0 &= \frac{D d_y}{d_r^2}, \\ -->
-<!-- y_0 &= \frac{-D d_x}{d_r^2}, \\ -->
-<!-- \hat{\mathbf{u}} &= \left( \frac{d_x}{d_r}, \frac{d_y}{d_r} \right), \\ -->
-<!-- h &= \frac{\sqrt{r^2 d_r^2 - D^2}}{d_r}. -->
-<!-- \end{aligned} -->
-<!-- $$ -->
-
 $$
 \begin{aligned}
 x &= \frac{D d_y \pm d_x \sqrt{r^2 d_r^2 - D^2}}{d_r^2} \\
@@ -153,7 +144,7 @@ trajectory segment points.
 
 The full implementation can be found inside the function [find_goal_point()](https://github.com/kumaradityag/fp-control/blob/e145767ec9b8fbaf04f0cfd550c42bd7930a55fd/packages/pure_pursuit_control/include/pure_pursuit_controller/goal.py#L13)
 
-### Control Command Computation - "Follow the carrot" approach (naive)
+### Control Command Computation - "Follow the carrot" approach
 
 The first implementation of pure pursuit that we coded kept the linear velocity 
 constant and only accounted for the angular velocity, which was calculated 
@@ -204,29 +195,7 @@ omega = kp * turn_error
 The full code implementation can be found in the function 
 [compute_control_action()](https://github.com/kumaradityag/fp-control/blob/e145767ec9b8fbaf04f0cfd550c42bd7930a55fd/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23)
 
-
-#### Results - "Follow the carrot"
-
-Althought this approach is quite simple, we found that it performed relatively 
-well with the right parameters. When driving at lower speed, the duckiebot 
-was able to turn the corner gracefully without too much oscillation. However, 
-as soon as we instruct it to drive a bit faster, 
-it wasn't very good at turning around corners, especially in the inner lane 
-due to its sharp corners.
-
-
-Outer Loop:
-```{=html}
-<iframe src="https://drive.google.com/file/d/1ga7rnIbhwDYizVIQUI2vUZ9cj6RG9D2b/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
-```
-
-Inner Loop:
-
-```{=html}
-<iframe src="https://drive.google.com/file/d/1YI_d33H-vBUEEcU9B2leVrXtq-WjtjrI/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
-```
-
-### Control Command Computation - Curvature-based approach
+### Control Command Computation - Tangent approach
 
 In order to improve the duckiebot performance around sharp corners, we wanted 
 to adjust the linear velocity and angle velocity based on curvature. Similarly 
@@ -236,7 +205,7 @@ to find the curvature.
 
 Consider the following picture:
 
-![courtesy of Purdue Sigbots](./assets/images/pure_pursuit_turn_error.png)
+![Courtesy of Purdue Sigbots](./assets/images/pure_pursuit_turn_error.png)
 
 Using trigonometry, we find that 
 
@@ -265,7 +234,7 @@ $$v = \bar{v} * \frac{1}{k} = \bar{v} * R$$
 
 To derive the angular error, now consider the diagram below:
 
-![courtesy of Purdue Sigbots](./assets/images/pure_pursuit_angular_error.png)
+![Courtesy of Purdue Sigbots](./assets/images/pure_pursuit_angular_error.png)
 
 Assuming that the robot finishes the turn after time $\delta t$, we have that 
 the left side ($L_l$) and right side ($L_R$) of the duckie turn with velocity
@@ -360,37 +329,4 @@ omega = omega_factor * (width * np.sin(turn_error) * v) / L_d
 ```
 
 The full code can be found [here](https://github.com/kumaradityag/fp-control/blob/main/packages/pure_pursuit_control/include/pure_pursuit_controller/pure_pursuit_controller.py#L23)
-
-#### Results - "Tangent Approach"
-
-Theoritically, the tangent approach should have yielded better results than 
-the "carrot and stick" approach, however, this wasn't what we observed. 
-After turning around the corner, the tangent approach overcorrected way more 
-than with the naive approach. Additionally, we see that the robot didn't 
-correct cross-track error and drove near some time on the line before 
-correcting for it.
-
-Outer Loop:
-```{=html}
-<iframe src="https://drive.google.com/file/d/1pXbwknVJrbhRgPkGaJ3Z8cl9AH0PRWUk/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
-```
-
-Inner Loop:
-```{=html}
-<iframe src="https://drive.google.com/file/d/1dap8M6RoXJU4CMMKh4Rm86MiKA9e_1ej/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
-```
-
-Some of these results can be explained because we changed the map on which 
-the duckie drove, which generated a worse trajectory than the test we had 
-generated prior.
-
-Trajectory Outer Loop:
-```{=html}
-<iframe src="https://drive.google.com/file/d/1F7V--gRNKAjZdDYyXZirzwYqiHWR51qc/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
-```
-
-Trajectory Inner Loop:
-```{=html}
-<iframe src="https://drive.google.com/file/d/1p1YS1dPKCC4cZ8kCuNYXfqpnl9Z63at6/preview" width="640" height="480" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
-```
 

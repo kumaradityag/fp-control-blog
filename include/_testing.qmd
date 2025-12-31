@@ -1,20 +1,20 @@
-To test the code, first clone the project GitHub repository and follow the 
-steps defined in the `README.md` file.
-```{bash}
+Testing instructions are also available in the README of the project repository, [here](https://github.com/kumaradityag/fp-control). They are also copied here for completeness.
+
+To test the code, first clone the project GitHub repository.
+```bash
 git clone git@github.com:kumaradityag/fp-control
 ```
 
-If you followed all the steps in the `README.md` file, you should have 
-the following:
-- You have cloned the repo
-- You have installed the duckietown-shell. You can verify that you have 
+These instructions assume you have the following:
+
+- A duckietown-shell. You can verify that you have 
   sucessfully installed it using `dts --version`. If that's not the 
   case, please follow the instructions [here](https://docs.duckietown.com/daffy/opmanual-duckiebot/setup/setup_laptop/setup_dt_shell.html)
 - You have created your virtual duckiebot. You can verify that your virtual 
   duckie exists with the command `dts duckiebot virtual start vbot` and then 
   `dts fleet discover`. `vbot` is the name of our virtual duckie, but feel free 
   to replace it with your own virtual duckie name
-- You have your real life robot. This step is only required if you want to 
+- You have your real life duckiebot setup. This step is only required if you want to 
   test the demo in real life. If you want to get your duckie hardware, see
   the official documentation [here](https://docs.duckietown.com/daffy/opmanual-duckiebot/preliminaries_hardware/get_hardware/index.html)
 
@@ -24,103 +24,106 @@ The most important directories of our projects are `packages/trajectory_planner`
 and `packages/pure_pursuit_control`, which are where our trajectory generation 
 code and our pure pursuit code live.
 
-### Testing the project
-
-Virtual and physical duckie have different wheel friction and mass distribution, 
-so they respond to the same parameters differently. Additionally, driving 
+Virtual and physical duckiebot can behave slightly differently because of real-world physics, 
+so they respond to the same parameters differently. Additionally, in our current setup, driving 
 in the inner or outter lane also require different parameters. Therefore, you will 
 probably need to tune your parameters for your own duckiebot.
 
 The configs for the trajectory planner and the pure pursuit controller can 
 be found respectively inside `packages/trajectory_planner/config/trajectory_planner_node/default.yaml`
-and `packages/pure_pursuit_control/config/pure_pursuit_control_node/default.yaml`.
+and `packages/pure_pursuit_control/config/pure_pursuit_control_node/default.yaml`. Additional config information is present at the bottom.
 
-The trajectory planner node has the following parameters:
-- `min_forward`: minimum distance at which we consider trajectory points
-- `max_forward`: maximum distance at which we consider trajectory points
-- `n_samples`: number of samples used for ransac
-- `lane_width`: width of the lane in meters
-- `epsilon`: error around lane width
-- `yellow_pts_threshold`: minimum points in the trajectory for the yellow lane to be valid
-- `white_pts_threshold`: minimum points in the trajectory for the white lane to be valid
-- `default_mode`: relying on WHITE/YELLOW lane
-- `ransac_max_iterations`: number of iterations for ransac to compute inliers
-- `ransac_distance_threshold`: how far should ransac sample the points from (in m)
-- `poly_degree`: polynomial degree for ransac
-- `buffer_size`: number of previous trajectory saved in buffer
-- `buffer_smooth_alpha`: float number between 0-1 used to smooth out current 
-  trajectory based on the previous one
-- `buffer_theta_threshold`: theta angle for which in degrees
+### Setup
 
-The pure pursuit control node has the following parameters:
-- `lookahead_distance`: distance at which the pure pursuit controller look ahead 
-  (in cm)
-- `v_bar`: linear velocity
-- `v_bar_max`: maximal linear velocity
-- `v_bar_min`: minimal linear velocity
-- `width`: chassis width of the duckie. Should stay 0.1
-- `omega_factor`: how hard we want the duckie to turn
+You will need at least three terminals to spin and view everything needed. Replace `<duckie_name>` with your duckiebot name.
 
-#### Launching the code
+Preliminaries (in every terminal):
+```bash
+# Set robot name
+export ROBOT_NAME=<duckie_name>
+```
 
-Once the parameters have been defined, the code can be launched with the 
-following commands.  You will need 4 terminals to view everything needed. 
+Preliminaries for the matrix (if needed):
+```bash
+dts matrix run --standalone --map ./assets/duckiematrix/map/loop/
+dts matrix attach $ROBOT_NAME map_0/vehicle_0
+```
+
+All these other commands need to run from the project repository:
 
 In terminal 1:
 ```bash
-cd fp-control
-dts fleet discover
-dts matrix run --standalone --map ./assets/duckiematrix/map/loop/
+dts devel build -H $ROBOT_NAME -f
 ```
 
 In terminal 2:
 ```bash
-dts matrix attach vbot map_0/vehicle_0
-dts devel build -H vbot -f
-dts devel run -H vbot -L lane-following
+# To view the debug images
+dts duckiebot image_viewer $ROBOT_NAME
 ```
 
 In terminal 3:
 ```bash
-dts gui vbot
-# Wait for the entrypoint - inside it run:
-rqt_image_view
-# Go to /trajectory_planner to see generated trajectory
+# For emergency stop
+dts duckiebot keyboard_control $ROBOT_NAME
 ```
 
 In terminal 4:
 ```bash
-ssh duckie@vbot.local
+# If you want to manually change some of the param values
+ssh duckie@<duckie_name>.local
 # After logging into your duckiebot:
 docker exec -it ros-interface bash
+rosparam list | grep <param_search_query>
+rosparam set <param_name> <value>
 ```
 
-Some tips:
-- Instead of re-building the code every time we change the parameters in 
-  terminal 2, we can use the command `rosparam set <param_name> <value>`.
-  The list of params can be found with `rosparam list | grep <param_name>`
-- To override the duckie commands, you can open a fifth terminal and use the 
-  keyboard control with `dts duckiebot keyboard_control vbot`. To make the 
-  duckie stop, you can click on "emergency stop".
 
+#### Run the carrot approach
+In terminal 1:
+```bash
+# For physical duckie
+dts devel run -H $ROBOT_NAME -L lane-following-carrot
 
-#### Testing the project on the virtual duckie
+# For virtual duckie
+dts devel run -H $ROBOT_NAME -L lane-following-carrot-virtual
+```
 
-**Parameters to drive on the outer lane**
+#### Run the tangent approach
 
-TBD
+```bash
+# For physical duckie
+dts devel run -H $ROBOT_NAME -L lane-following
 
-**Parameters to drive on the inner lane**
+# For virtual duckie
+dts devel run -H $ROBOT_NAME -L lane-following-virtual
+```
 
-TBD
+### Config Descriptions
 
-#### Testing the project on the physical duckie
+The trajectory planner node has the following config parameters:
 
-**Parameters to drive on the outer lane**
+* `min_forward`: minimum distance at which we consider trajectory points
+* `max_forward`: maximum distance at which we consider trajectory points
+* `n_samples`: number of samples used for ransac
+* `lane_width`: width of the lane in meters
+* `epsilon`: error around lane width
+* `yellow_pts_threshold`: minimum points in the trajectory for the yellow lane to be valid
+* `white_pts_threshold`: minimum points in the trajectory for the white lane to be valid
+* `default_mode`: relying on WHITE/YELLOW lane
+* `ransac_max_iterations`: number of iterations for ransac to compute inliers
+* `ransac_distance_threshold`: max error to separate inliers from outliers (in m)
+* `poly_degree`: polynomial degree for ransac
+* `buffer_size`: number of previous trajectory saved in buffer
+* `buffer_smooth_alpha`: float number between 0-1 used to smooth out current trajectory based on the previous one
+* `buffer_theta_threshold`: theta angle threshold for heading change in degrees
 
-TBD
+The pure pursuit control node has the following config parameters:
 
-**Parameters to drive on the inner lane**
-
-TBD
+* `lookahead_distance`: distance at which the pure pursuit controller look ahead (in cm)
+* `v_bar`: linear velocity
+* `v_bar_max`: maximal linear velocity
+* `v_bar_min`: minimal linear velocity
+* `width`: chassis width of the duckie. Should stay 0.1
+* `omega_factor`: how hard we want the duckie to turn
 

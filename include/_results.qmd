@@ -1,1 +1,58 @@
-Add result videos to this section.
+### Pure Pursuit - "Follow the carrot"
+
+Althought this approach is quite simple, we found that it performed relatively 
+well with the right parameters. When driving at lower speed, the duckiebot 
+was able to turn the corner gracefully without too much oscillation. However, 
+as soon as we get it to drive a bit faster, 
+it wasn't very good at turning around corners, especially in the inner lane 
+due to its sharp corners.
+
+Outer Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1ga7rnIbhwDYizVIQUI2vUZ9cj6RG9D2b/preview" style="width: 100%; aspect-ratio: 16/9;" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+
+Inner Loop:
+
+```{=html}
+<iframe src="https://drive.google.com/file/d/1YI_d33H-vBUEEcU9B2leVrXtq-WjtjrI/preview" style="width: 100%; aspect-ratio: 16/9;" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+### Pure Pursuit - Tangent approach
+
+With the tangent approach we can observe the duckiebot going faster on the straights and slower around the corners. 
+However this approach did not produce strictly better results than the "follow the carrot" approach. 
+As after turning around the corner, the tangent approach overcorrected way more 
+than with the naive approach.
+
+Some of these results can be explained because we changed the map on which 
+the duckie drove, which generated a worse trajectory than the test we had 
+generated prior.
+
+Outer Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1pXbwknVJrbhRgPkGaJ3Z8cl9AH0PRWUk/preview" style="width: 100%; aspect-ratio: 16/9;" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+
+Inner Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1dap8M6RoXJU4CMMKh4Rm86MiKA9e_1ej/preview" style="width: 100%; aspect-ratio: 16/9;" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+
+### Trajectory Visualization
+
+We also visualize the generated trajectory (shown in red points) along with the detected white and yellow bouundries in the two videos below.
+
+Trajectory Outer Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1F7V--gRNKAjZdDYyXZirzwYqiHWR51qc/preview" style="width: 100%; aspect-ratio: 2/1;" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```
+
+
+Trajectory Inner Loop:
+```{=html}
+<iframe src="https://drive.google.com/file/d/1p1YS1dPKCC4cZ8kCuNYXfqpnl9Z63at6/preview" style="width: 100%; aspect-ratio: 2/1;" allow="autoplay; fullscreen; picture-in-picture" frameborder="0"></iframe>
+```

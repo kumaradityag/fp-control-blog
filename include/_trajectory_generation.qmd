@@ -1,21 +1,52 @@
-Add info about trajectory generation
+This module uses ground-projected lane detections in the robot frame: white points $\mathcal{W}={(x_i,y_i)}$ and yellow points $\mathcal{Y}={(x_j,y_j)}$, where $x$ is forward distance and $y$ is lateral offset. The goal is to output a local centerline trajectory $\Gamma={(x_k, y_k)}_{k=1}^{N}$ over a fixed horizon $x_k \in [0, \texttt{max\_forward}]$, suitable for pure pursuit. In practice, the key challenge is that the point sets are noisy (mainly due to false detections), so the trajectory generator must be robust and temporally stable.
 
-We can place images or charts that span the full width or sit in the margin.
+### Methods explored but discarded
 
-::: {.column-margin}
-![A smaller figure ref for now](./assets/images/image.png)
+**1) Midpoint pairing heuristic.**
+We first attempted to construct the centerline by pairing boundary points and taking midpoints. Concretely, for each detected yellow point we found the nearest white point and defined the midpoint of the pair as a centerline sample. This fails on real hardware because white detections frequently "bleed" onto the yellow marker (e.g., due to lighting and segmentation artifacts). As a result, nearest-neighbor pairing becomes unreliable: midpoints drift toward a boundary and jump between inconsistent pairings across frames. The downstream fit then produces trajectories that are not representative of the lane center.
+
+**2) Bézier fit + normal shift.**
+We also tried fitting a Bézier curve to lane detections and shifting it inward by half the lane width using the curve normal. While geometrically appealing, this approach is brittle because the Bézier fit tends to be strongly influenced by individual detections. With sparse or noisy points, a single outlier can significantly change the curve shape, again producing unreliable trajectories and also with large frame-to-frame variations.
+
+### Final approach: polynomial fitting with RANSAC
+
+What worked reliably was a robust polynomial fit in the ground plane, using RANSAC to reject outliers.
+
+1. Choose which boundary to fit.
+   In our experiments, fitting on white points was most stable (more consistent and typically more numerous). We default to $\mathcal{W}$, and switch to $\mathcal{Y}$ only when there are insufficient white detections.
+
+::: {.callout-caution collapse="true" title="White Point Filtering"}
+Because the system is configured for right-hand driving, we sometimes detect white points from the adjacent (left) lane boundary. To prevent mixing these into the fit, we discard white points that lie too far to the left (beyond roughly half a lane width). This simple geometric filter significantly reduced "lane switching" behavior in the fitted curve.
 :::
 
-### Code Block
+2. Fit a polynomial model robustly.
+   We fit $y(x)$ as a quadratic polynomial and use RANSAC so that spurious points (from floor, glare, or wrong-color detections) do not dominate the model. Intuitively, RANSAC repeatedly fits the curve to small random subsets and keeps the hypothesis that agrees with the largest set of points. Once these inliers are identified, the final curve is fit on all the inliers to ensure maximum accuracy. This gives a curve that follows the dominant lane boundary even when the input is noisy.
 
-Because we enabled code folding, this big block won't clutter the page unless the user clicks "Show Code".
+3. Convert boundary curve to centerline.
+   Once we have a clean boundary curve, we compute the local normal direction along the curve and shift laterally by half the lane width to obtain the centerline.
 
-```{python}
-import numpy as np
+4. Sample a fixed-horizon trajectory.
+   We uniformly sample $N$ points in $x$ from $0$ to $\texttt{max\_forward}$ and evaluate the centerline model to produce the final trajectory points $(x_k,y_k)$. This produces a consistent representation for pure pursuit (same number of points, same horizon, every frame).
 
-a = 1
-b = 2
-multiple = a * b
 
-# Complex plotting code...
-```
+
+### Temporal buffering for smoothness and consistency
+
+A good single-frame trajectory is not enough as pure pursuit can be sensitive to frame-to-frame trajectory jumps, which show up as steering jitter. We therefore stabilize the trajectory over time with two mechanisms:
+
+**1) Reject implausible trajectory flips.**
+We compute a simple "heading proxy" from the trajectory midpoint (a point around the middle of the horizon). If the direction from the robot to this midpoint changes by more than a threshold $\theta_{\text{thresh}}$ compared to the previous frame, we treat the current trajectory as unreliable and reuse the previous one. An example of the $\theta$ computation is also shown in @fig-theta. This catches cases where the fit snaps to the wrong structure for a frame (common under sparse or false detections).
+
+![Heading change calulcation between the current and previous trajectory](assets/images/trajectory_theta.png){#fig-theta}
+
+**2) Exponential smoothing of the lateral profile.**
+When a trajectory is accepted, we still smooth it to reduce high-frequency noise:
+$$
+y^{\text{sm}}_{t} = \alpha*y_{t} + (1-\alpha)*y^{\text{sm}}_{t-1},
+$$
+
+applied pointwise across the sampled trajectory. The parameter $\alpha$ controls responsiveness vs. smoothness. This simple filter substantially reduces steering jitter while preserving curvature for cornering within the short planning horizon.
+
+Overall, this pipeline produces a locally defined, robust, and temporally stable centerline trajectory from ground-projected lane points, which is then tracked by pure pursuit.
+
+The code for trajectory generation can be found [here](https://github.com/kumaradityag/fp-control/blob/628538e81f2285e2fee654630a9204dcadac7b19/packages/trajectory_planner/include/trajectory_generation.py#L107)
