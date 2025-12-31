@@ -702,14 +702,14 @@ The trajectory planner node has the following config parameters:
 
 - `min_forward`: minimum distance at which we consider trajectory points
 - `max_forward`: maximum distance at which we consider trajectory points
-- `n_samples`: number of samples used for ransac
-- `lane_width`: width of the lane in meters
-- `epsilon`: error around lane width
+- `n_samples`: number of points generated for the trajectory
+- `lane_width`: width of the lane in meters from Duckietown docs
+- `epsilon`: to correct the lane width by a small margin
+- `default_mode`: relying on WHITE/YELLOW lane
 - `yellow_pts_threshold`: minimum points in the trajectory for the
   yellow lane to be valid
 - `white_pts_threshold`: minimum points in the trajectory for the white
   lane to be valid
-- `default_mode`: relying on WHITE/YELLOW lane
 - `ransac_max_iterations`: number of iterations for ransac to compute
   inliers
 - `ransac_distance_threshold`: max error to separate inliers from

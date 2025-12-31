@@ -78,7 +78,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-5b594a5942e20a09988b62db4a4d290e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-01b482d4fb5db1abb28b8ca678350662.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -543,7 +543,7 @@ y &amp;= \frac{-D d_x \pm d_y \sqrt{r^2 d_r^2 - D^2}}{d_r^2}
 <p>Thus,</p>
 <p><span class="math display">\omega = \text{kp\_sterring} \cdot \alpha</span></p>
 <p>The code for the “follow the carrot” approach looks something like this:</p>
-<div id="026fb06f" class="cell" data-execution_count="1">
+<div id="ce50ea83" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>goal_point, _ <span class="op">=</span> find_goal_point(</span>
@@ -669,7 +669,7 @@ L_r
 <li><code>v_bar_min</code>: minimal linear velocity</li>
 <li><code>v_bar_max</code>: maximal linear velocity</li>
 </ul>
-<div id="19fd2c0d" class="cell" data-execution_count="2">
+<div id="a7226bc5" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dx, dy <span class="op">=</span> (</span>
@@ -786,12 +786,12 @@ L_r
 <ul>
 <li><code>min_forward</code>: minimum distance at which we consider trajectory points</li>
 <li><code>max_forward</code>: maximum distance at which we consider trajectory points</li>
-<li><code>n_samples</code>: number of samples used for ransac</li>
-<li><code>lane_width</code>: width of the lane in meters</li>
-<li><code>epsilon</code>: error around lane width</li>
+<li><code>n_samples</code>: number of points generated for the trajectory</li>
+<li><code>lane_width</code>: width of the lane in meters from Duckietown docs</li>
+<li><code>epsilon</code>: to correct the lane width by a small margin</li>
+<li><code>default_mode</code>: relying on WHITE/YELLOW lane</li>
 <li><code>yellow_pts_threshold</code>: minimum points in the trajectory for the yellow lane to be valid</li>
 <li><code>white_pts_threshold</code>: minimum points in the trajectory for the white lane to be valid</li>
-<li><code>default_mode</code>: relying on WHITE/YELLOW lane</li>
 <li><code>ransac_max_iterations</code>: number of iterations for ransac to compute inliers</li>
 <li><code>ransac_distance_threshold</code>: max error to separate inliers from outliers (in m)</li>
 <li><code>poly_degree</code>: polynomial degree for ransac</li>
