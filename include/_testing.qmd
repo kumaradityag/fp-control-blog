@@ -83,20 +83,24 @@ rosparam set <param_name> <value>
 In terminal 1:
 ```bash
 # For physical duckie
-dts devel run -H $ROBOT_NAME -L lane-following-carrot
+dts devel run -H $ROBOT_NAME -L lane-following-carrot-physical-outer
+dts devel run -H $ROBOT_NAME -L lane-following-carrot-physical-inner
 
 # For virtual duckie
-dts devel run -H $ROBOT_NAME -L lane-following-carrot-virtual
+dts devel run -H $ROBOT_NAME -L lane-following-carrot-virtual-outer
+dts devel run -H $ROBOT_NAME -L lane-following-carrot-virtual-inner
 ```
 
 #### Run the tangent approach
 
 ```bash
 # For physical duckie
-dts devel run -H $ROBOT_NAME -L lane-following
+dts devel run -H $ROBOT_NAME -L lane-following-tangent-physical-outer
+dts devel run -H $ROBOT_NAME -L lane-following-tangent-physical-inner
 
 # For virtual duckie
-dts devel run -H $ROBOT_NAME -L lane-following-virtual
+dts devel run -H $ROBOT_NAME -L lane-following-tangent-virtual-outer
+dts devel run -H $ROBOT_NAME -L lane-following-tangent-virtual-inner
 ```
 
 ### Config Descriptions
