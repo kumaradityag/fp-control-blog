@@ -1,11 +1,40 @@
-Add intro here. Here is some text. Quarto allows you to put things in the margins.
+This project implements lane following on a Duckiebot using trajectory generation and pure pursuit control. The standard Duckietown lane-following stack estimates lane pose $(d, \phi)$ via a histogram filter and applies a PID controller on that estimate. In practice, the $(d, \phi)$ measurement can be noisy and discontinuous. Especially under partial occlusions, sparse lane markings, or during turns, which leads to jittery steering and reduced driving smoothness.
 
-[This is a side note that will appear in the right margin.]{.aside}
+Instead of using $(d, \phi)$, we use perception output (ground-projected lane segments) directly for local path construction. At each time step, we generate a **centerline trajectory in the robot frame**, apply temporal smoothing, and track the resulting path using **pure pursuit control**. This replaces explicit lane-state estimation with a path-tracking formulation: control commands are computed directly from the local trajectory, yielding smoother driving through curves.
+
+The baseline stack consists of:
+
+* **Line detection:** color segmentation (white/yellow/red), edge detection (Canny), and line extraction (Hough) to produce lane-marker segments in the image.
+* **Ground projection:** homography-based mapping from image coordinates to the ground plane using camera calibration.
+* **Lane estimation:** a histogram filter over $(d, \phi)$ that fuses a kinematic prediction with segment-based updates.
+* **Control:** PID-style steering using the estimated $(d, \phi)$, typically with constant forward velocity and angular correction based on lateral and heading error.
+
+We keep **line detection** and **ground projection**, but replace the downstream modules:
+
+* **Trajectory generation:** compute a forward centerline path from projected segments, with robust fitting and temporal smoothing.
+* **Pure pursuit control:** select a lookahead goal point on the path and compute curvature/steering commands to track it.
 
 ```{mermaid}
 flowchart LR
-  A[Hard edge] --> B(Round edge)
-  B --> C{Decision}
-  C --> D[Result one]
-  C --> E[Result two]
+  A["Camera Image"] --> B["Line Detection"]
+  B --> C["Ground Projection"]
+
+  subgraph Baseline_Duckietown ["Baseline Duckietown Stack"]
+    D["Lane Estimation"] --> E["PID Control"]
+  end
+
+  subgraph Our_Project ["Our Project Stack"]
+    F["Trajectory Generation"] --> G["Pure Pursuit Control"]
+  end
+
+  C --> D
+  C --> F
+  E --> H["Wheel Commands"]
+  G --> H
 ```
+
+Over this project we set and achieved these three goals:
+
+1. Trajectory generation from detected lane segments, including temporal smoothing for stability.
+2. Pure pursuit control on the generated trajectory.
+3. Demonstrate continuous looped driving on a real Duckiebot in the lab Duckietown.

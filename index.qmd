@@ -4,9 +4,9 @@ author:
   - name: "Emulie Chhor"
     affiliation: "Université de Montréal"
   - name: "Kumaraditya Gupta"
-    affiliation: "Université de Montréal and Mila"
+    affiliation: "Université de Montréal"
 date: today
-abstract: "This is a summary of our project results..."
+abstract: "This project replaces the standard Duckietown lane following stack with a system that generates a local centerline trajectory. By tracking this path with a Pure Pursuit controller, the duckiebot achieves smoother navigation through curves and better resilience to noisy sensor data compared to previous PID-based approach."
 ---
 
 ## Introduction
