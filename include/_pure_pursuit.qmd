@@ -17,7 +17,7 @@ flowchart LR
     A[Goal Point Computation] --> B[Control Command Computation]
 ```
 
-If you are familiar with the "carrot and stick" analogy, pure pursuit control 
+If you are familiar with the "follow the carrot" analogy, pure pursuit control 
 works fashionably in the same way: we make the robot (the donkey) move towards 
 the goal point (the carrot), which we always keep at a distance $L_d$, the 
 lookahead distance. If the donkey is too far from the goal point, we "stick" 
@@ -153,7 +153,7 @@ using the turn error between the robot heading and the goal point.
 We define 3 parameters:
 
 - `lookahead_distance`: Circle radius at which the duckiebot sees
-- `kp`: How hard do we want to steer the wheel upon turn error
+- `kp_steering`: How hard do we want to steer the wheel upon turn error
 - `v_bar`: Linear velocity
 
 Consider the following picture,
@@ -166,9 +166,9 @@ $$\alpha = tan(\frac{y_1-y_0}{x_1 - x_0})$$
 
 Thus, 
 
-$$\omega = kp \cdot \alpha$$
+$$\omega = \text{kp\_sterring} \cdot \alpha$$
 
-The code for the "carrot and stick" approach looks something like this:
+The code for the "follow the carrot" approach looks something like this:
 
 ```{python}
 #| echo: true
@@ -189,7 +189,7 @@ turn_error = abs_target_angle - np.deg2rad(self.current_heading)
 L_d = math.sqrt(dx**2 + dy**2)
 
 v = v_bar
-omega = kp * turn_error
+omega = kp_steering * turn_error
 ```
 
 The full code implementation can be found in the function 
